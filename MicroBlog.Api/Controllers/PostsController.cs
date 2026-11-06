@@ -117,6 +117,42 @@ public class PostsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
+    // PUT: api/posts/{id}  (protected: only the owner may edit)
+    // Order of checks: 401 (no valid token) -> 404 (post missing) -> 403 (not the owner)
+    [Authorize]
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update(int id, [FromBody] UpdatePostRequest request)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
+        }
+
+        // Tracked query (no AsNoTracking) because we are going to modify and save it
+        var post = await _context.Posts
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Id == id);
+
+        if (post == null)
+        {
+            return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
+        }
+
+        // The user is authenticated, the post exists, but it belongs to someone else => 403, not 401
+        if (post.UserId != currentUserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "ليس لديك صلاحية لتعديل هذا المنشور." });
+        }
+
+        post.Content = request.Content;
+        post.UpdatedAt = DateTime.UtcNow;
+
+        await _context.SaveChangesAsync();
+
+        return Ok(ToDto(post));
+    }
+
     // GET: api/posts/search?term=xxx
     [HttpGet("search")]
     public async Task<IActionResult> SearchPosts([FromQuery] string? term)
