@@ -17,6 +17,7 @@ public class PostService : IPostService
     public async Task<IEnumerable<Post>> GetAllPostsAsync()
     {
         return await _context.Posts
+            .Include(p => p.User)
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .ToListAsync();
@@ -24,7 +25,11 @@ public class PostService : IPostService
 
     public async Task<Post?> GetPostByIdAsync(int id)
     {
-        return await _context.Posts.FindAsync(id);
+        // FindAsync cannot Include related data, so use a normal query
+        return await _context.Posts
+            .Include(p => p.User)
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == id);
     }
 
     public async Task<Post> CreatePostAsync(Post newPost)
@@ -33,12 +38,15 @@ public class PostService : IPostService
 
         await _context.Posts.AddAsync(newPost);
         await _context.SaveChangesAsync();
+        // Load the author so the caller can build the response (AuthorUsername)
+        await _context.Entry(newPost).Reference(p => p.User).LoadAsync();
         return newPost;
     }
 
     public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
     {
         return await _context.Posts
+            .Include(p => p.User)
             .AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
@@ -53,6 +61,7 @@ public class PostService : IPostService
     public async Task<IEnumerable<Post>> SearchPostsAsync(string term)
     {
         return await _context.Posts
+            .Include(p => p.User)
             .AsNoTracking()
             .Where(p => p.Title.ToLower().Contains(term.ToLower()) || p.Content.ToLower().Contains(term.ToLower()))
             .ToListAsync();

@@ -20,15 +20,15 @@ public class PostsController : ControllerBase
 
     // GET: api/posts
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Post>>> GetAll()
+    public async Task<ActionResult<IEnumerable<PostResponseDto>>> GetAll()
     {
         var posts = await _postService.GetAllPostsAsync();
-        return Ok(posts);
+        return Ok(posts.Select(ToDto));
     }
 
     // GET: api/posts/{id}
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<Post>> GetById(int id)
+    public async Task<ActionResult<PostResponseDto>> GetById(int id)
     {
         var post = await _postService.GetPostByIdAsync(id);
 
@@ -37,7 +37,7 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
         }
 
-        return Ok(post);
+        return Ok(ToDto(post));
     }
 
     // GET: api/posts/my-posts  (protected: only the caller's own posts)
@@ -51,7 +51,7 @@ public class PostsController : ControllerBase
         }
 
         var myPosts = await _postService.GetPostsByUserAsync(currentUserId);
-        return Ok(myPosts);
+        return Ok(myPosts.Select(ToDto));
     }
 
     // GET: api/posts/count
@@ -82,7 +82,8 @@ public class PostsController : ControllerBase
         };
 
         var createdPost = await _postService.CreatePostAsync(post);
-        return CreatedAtAction(nameof(GetById), new { id = createdPost.Id }, createdPost);
+        var response = ToDto(createdPost);
+        return CreatedAtAction(nameof(GetById), new { id = response.Id }, response);
     }
 
     // GET: api/posts/search?term=xxx
@@ -101,7 +102,7 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"لم يتم العثور على أي منشورات تحتوي على الكلمة: '{term}'." });
         }
 
-        return Ok(results);
+        return Ok(results.Select(ToDto));
     }
 
     // DELETE: api/posts/{id}  (protected)
@@ -131,5 +132,20 @@ public class PostsController : ControllerBase
             DeletedBy = currentUserId,
             DeletedAt = DateTime.UtcNow
         });
+    }
+
+    // Entity -> DTO: flat shape without the User -> Posts cycle
+    private static PostResponseDto ToDto(Post post)
+    {
+        return new PostResponseDto
+        {
+            Id = post.Id,
+            Title = post.Title,
+            Content = post.Content,
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt,
+            UserId = post.UserId,
+            AuthorUsername = post.User?.Username ?? string.Empty
+        };
     }
 }
