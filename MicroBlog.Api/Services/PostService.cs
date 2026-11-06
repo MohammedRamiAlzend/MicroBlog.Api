@@ -18,31 +18,40 @@ public class PostService : IPostService
 
     // DTO projection: EF Core translates this into a SELECT of only these columns
     // (plus a JOIN for the author name). No Post/User entities are loaded and no cycle is possible.
-    private static readonly Expression<Func<Post, PostResponseDto>> ToResponse = p => new PostResponseDto
+    // The likes counter and the "did I like it?" flag are computed inside the same query
+    // (no extra round trip per post). Anonymous callers get IsLikedByCurrentUser = false.
+    private static Expression<Func<Post, PostResponseDto>> ToResponse(int? currentUserId)
     {
-        Id = p.Id,
-        Content = p.Content,
-        CreatedAt = p.CreatedAt,
-        UpdatedAt = p.UpdatedAt,
-        UserId = p.UserId,
-        AuthorUsername = p.User.Username
-    };
+        int viewerId = currentUserId ?? 0; // 0 never matches a real user id
 
-    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync()
+        return p => new PostResponseDto
+        {
+            Id = p.Id,
+            Content = p.Content,
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            UserId = p.UserId,
+            AuthorUsername = p.User.Username,
+            LikesCount = p.Likes.Count,
+            IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == viewerId)
+        };
+    }
+
+    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync(int? currentUserId = null)
     {
         return await _context.Posts
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
-            .Select(ToResponse)
+            .Select(ToResponse(currentUserId))
             .ToListAsync();
     }
 
-    public async Task<PostResponseDto?> GetPostByIdAsync(int id)
+    public async Task<PostResponseDto?> GetPostByIdAsync(int id, int? currentUserId = null)
     {
         return await _context.Posts
             .AsNoTracking()
             .Where(p => p.Id == id)
-            .Select(ToResponse)
+            .Select(ToResponse(currentUserId))
             .FirstOrDefaultAsync();
     }
 
@@ -57,13 +66,13 @@ public class PostService : IPostService
         return newPost;
     }
 
-    public async Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId)
+    public async Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId, int? currentUserId = null)
     {
         return await _context.Posts
             .AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
-            .Select(ToResponse)
+            .Select(ToResponse(currentUserId))
             .ToListAsync();
     }
 
@@ -72,13 +81,13 @@ public class PostService : IPostService
         return await _context.Posts.CountAsync();
     }
 
-    public async Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term)
+    public async Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term, int? currentUserId = null)
     {
         return await _context.Posts
             .AsNoTracking()
             .Where(p => p.Content.ToLower().Contains(term.ToLower()))
             .OrderByDescending(p => p.CreatedAt)
-            .Select(ToResponse)
+            .Select(ToResponse(currentUserId))
             .ToListAsync();
     }
 }

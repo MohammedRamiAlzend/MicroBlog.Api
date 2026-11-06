@@ -10,4 +10,6 @@ public class PostResponseDto
     public DateTime? UpdatedAt { get; set; }
     public int UserId { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
+    public int LikesCount { get; set; }
+    public bool IsLikedByCurrentUser { get; set; }
 }

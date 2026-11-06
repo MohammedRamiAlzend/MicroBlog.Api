@@ -22,11 +22,18 @@ public class PostsController : ControllerBase
         _context = context;
     }
 
+    // For public endpoints: the id of the caller if a valid token was sent, otherwise null.
+    // No [Authorize] here, but the JWT middleware still fills User when a good token is present.
+    private int? GetOptionalUserId()
+    {
+        return int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+    }
+
     // GET: api/posts
     [HttpGet]
     public async Task<ActionResult<IEnumerable<PostResponseDto>>> GetAll()
     {
-        var posts = await _postService.GetAllPostsAsync();
+        var posts = await _postService.GetAllPostsAsync(GetOptionalUserId());
         return Ok(posts);
     }
 
@@ -34,7 +41,7 @@ public class PostsController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PostResponseDto>> GetById(int id)
     {
-        var post = await _postService.GetPostByIdAsync(id);
+        var post = await _postService.GetPostByIdAsync(id, GetOptionalUserId());
 
         if (post == null)
         {
@@ -55,7 +62,7 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"المستخدم برقم {userId} غير موجود." });
         }
 
-        var posts = await _postService.GetPostsByUserAsync(userId);
+        var posts = await _postService.GetPostsByUserAsync(userId, GetOptionalUserId());
         return Ok(posts);
     }
 
@@ -69,7 +76,7 @@ public class PostsController : ControllerBase
             return Unauthorized(new { message = "غير مصرح." });
         }
 
-        var myPosts = await _postService.GetPostsByUserAsync(currentUserId);
+        var myPosts = await _postService.GetPostsByUserAsync(currentUserId, currentUserId);
         return Ok(myPosts);
     }
 
@@ -148,7 +155,7 @@ public class PostsController : ControllerBase
         // Nothing changed: skip the database write and keep UpdatedAt untouched
         if (post.Content == request.Content)
         {
-            return Ok(ToDto(post));
+            return Ok(await ToDtoWithLikesAsync(post, currentUserId));
         }
 
         post.Content = request.Content;
@@ -156,7 +163,7 @@ public class PostsController : ControllerBase
 
         await _context.SaveChangesAsync();
 
-        return Ok(ToDto(post));
+        return Ok(await ToDtoWithLikesAsync(post, currentUserId));
     }
 
     // POST: api/posts/{id}/like  (protected)
@@ -247,7 +254,7 @@ public class PostsController : ControllerBase
             return BadRequest(new { message = "يرجى إدخال كلمة للبحث." });
         }
 
-        var results = await _postService.SearchPostsAsync(term);
+        var results = await _postService.SearchPostsAsync(term, GetOptionalUserId());
 
         if (!results.Any())
         {
@@ -286,6 +293,15 @@ public class PostsController : ControllerBase
 
         // REST standard for a successful delete: 204 with an empty body
         return NoContent();
+    }
+
+    // Same as ToDto, plus the like info (a tracked entity has no Likes loaded)
+    private async Task<PostResponseDto> ToDtoWithLikesAsync(Post post, int viewerId)
+    {
+        var dto = ToDto(post);
+        dto.LikesCount = await _context.Likes.CountAsync(l => l.PostId == post.Id);
+        dto.IsLikedByCurrentUser = await _context.Likes.AnyAsync(l => l.PostId == post.Id && l.UserId == viewerId);
+        return dto;
     }
 
     // Entity -> DTO: flat shape without the User -> Posts cycle
