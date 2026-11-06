@@ -72,4 +72,26 @@ public class PostsController : ControllerBase
 
         return CreatedAtAction(nameof(GetPostById), new { id = newPost.Id }, newPost);
     }
+
+    // GET: api/posts/search?term=xxx
+    [HttpGet("search")]
+    public IActionResult SearchPosts([FromQuery] string? term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            return BadRequest(new { Message = "يرجى إدخال كلمة للبحث." });
+        }
+
+        var results = Posts
+            .Where(p => p.Title.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                        p.Content.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (!results.Any())
+        {
+            return NotFound(new { Message = $"لم يتم العثور على أي منشورات تحتوي على الكلمة: '{term}'." });
+        }
+
+        return Ok(results);
+    }
 }
