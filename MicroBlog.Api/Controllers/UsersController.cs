@@ -75,7 +75,8 @@ public class UsersController : ControllerBase
             Email = user.Email,
             Bio = user.Bio,
             CreatedAt = user.CreatedAt,
-            LastLoginAt = user.LastLoginAt
+            LastLoginAt = user.LastLoginAt,
+            AccountAgeDays = (int)(DateTime.UtcNow - user.CreatedAt).TotalDays
         };
     }
 }

@@ -9,4 +9,7 @@ public class UserProfileResponse
     public string? Bio { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? LastLoginAt { get; set; }
+
+    // Computed field: days since the account was created
+    public int AccountAgeDays { get; set; }
 }
