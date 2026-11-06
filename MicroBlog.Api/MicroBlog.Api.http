@@ -40,10 +40,6 @@ Accept: application/json
 
 ###
 
-DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1
-
-###
-
 POST {{MicroBlog.Api_HostAddress}}/api/auth/register
 Content-Type: application/json
 
