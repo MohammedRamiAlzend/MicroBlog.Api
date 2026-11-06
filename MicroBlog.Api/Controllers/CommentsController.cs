@@ -127,4 +127,35 @@ public class CommentsController : ControllerBase
 
         return CreatedAtRoute("GetCommentById", new { postId, commentId = comment.Id }, response);
     }
+
+    // DELETE: api/posts/{postId}/comments/{commentId}  (protected)
+    [Authorize]
+    [HttpDelete("{commentId:int}")]
+    public async Task<IActionResult> DeleteComment(int postId, int commentId)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
+        }
+
+        // The comment must belong to the post in the URL
+        var comment = await _context.Comments
+            .FirstOrDefaultAsync(c => c.Id == commentId && c.PostId == postId);
+
+        if (comment == null)
+        {
+            return NotFound(new { message = $"التعليق رقم {commentId} غير موجود على هذا المنشور." });
+        }
+
+        if (comment.UserId != currentUserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "ليس لديك صلاحية لحذف هذا التعليق." });
+        }
+
+        _context.Comments.Remove(comment);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
 }
