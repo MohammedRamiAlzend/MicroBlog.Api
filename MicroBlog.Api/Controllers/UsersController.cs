@@ -96,6 +96,87 @@ public class UsersController : ControllerBase
         return Ok(ToProfile(user));
     }
 
+    // POST: api/users/{id}/follow  (protected)
+    [HttpPost("{id:int}/follow")]
+    public async Task<IActionResult> FollowUser(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "بيانات هوية التوكن غير صالحة." });
+        }
+
+        // Rule 1: nobody follows themselves (the database would happily accept the pair 1-1)
+        if (id == currentUserId)
+        {
+            return BadRequest(new { message = "لا يمكنك متابعة حسابك الشخصي." });
+        }
+
+        // Rule 2: the target must exist
+        if (!await _context.Users.AnyAsync(u => u.Id == id))
+        {
+            return NotFound(new { message = $"المستخدم رقم {id} غير موجود." });
+        }
+
+        // Rule 3: no duplicate follow
+        if (await _context.Follows.AnyAsync(f => f.FollowerId == currentUserId && f.FollowingId == id))
+        {
+            return BadRequest(new { message = "أنت تتابع هذا المستخدم بالفعل." });
+        }
+
+        _context.Follows.Add(new Follow { FollowerId = currentUserId, FollowingId = id, CreatedAt = DateTime.UtcNow });
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two identical requests at once: the composite key rejects the second one
+            return BadRequest(new { message = "أنت تتابع هذا المستخدم بالفعل." });
+        }
+
+        return Ok(await BuildFollowResponseAsync(id, true, "تمت المتابعة بنجاح."));
+    }
+
+    // DELETE: api/users/{id}/follow  (protected)
+    [HttpDelete("{id:int}/follow")]
+    public async Task<IActionResult> UnfollowUser(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "بيانات هوية التوكن غير صالحة." });
+        }
+
+        if (id == currentUserId)
+        {
+            return BadRequest(new { message = "لا يمكنك إجراء هذه العملية على حسابك الشخصي." });
+        }
+
+        var follow = await _context.Follows
+            .FirstOrDefaultAsync(f => f.FollowerId == currentUserId && f.FollowingId == id);
+
+        if (follow == null)
+        {
+            return BadRequest(new { message = "أنت لا تتابع هذا المستخدم أصلاً." });
+        }
+
+        _context.Follows.Remove(follow);
+        await _context.SaveChangesAsync();
+
+        return Ok(await BuildFollowResponseAsync(id, false, "تم إلغاء المتابعة بنجاح."));
+    }
+
+    private async Task<FollowResponseDto> BuildFollowResponseAsync(int targetUserId, bool isFollowing, string message)
+    {
+        return new FollowResponseDto
+        {
+            TargetUserId = targetUserId,
+            IsFollowing = isFollowing,
+            FollowersCount = await _context.Follows.CountAsync(f => f.FollowingId == targetUserId),
+            Message = message
+        };
+    }
+
     // Entity -> DTO mapping, so PasswordHash never leaves the server
     private static UserProfileResponse ToProfile(User user)
     {
