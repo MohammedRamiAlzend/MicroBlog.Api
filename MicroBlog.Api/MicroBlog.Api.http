@@ -104,3 +104,23 @@ DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1
 Authorization: Bearer {{token}}
 
 ###
+
+GET {{MicroBlog.Api_HostAddress}}/api/users/me
+Authorization: Bearer {{token}}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/users/claims
+Authorization: Bearer {{token}}
+
+###
+
+PUT {{MicroBlog.Api_HostAddress}}/api/users/me/bio
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "bio": "Backend developer learning ASP.NET Core"
+}
+
+###
