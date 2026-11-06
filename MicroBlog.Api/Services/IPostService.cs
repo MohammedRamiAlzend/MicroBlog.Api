@@ -12,5 +12,4 @@ public interface IPostService
     Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId);
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term);
-    Task<bool> DeletePostAsync(int id);
 }

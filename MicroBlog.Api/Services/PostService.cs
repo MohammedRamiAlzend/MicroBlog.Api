@@ -81,18 +81,4 @@ public class PostService : IPostService
             .Select(ToResponse)
             .ToListAsync();
     }
-
-    public async Task<bool> DeletePostAsync(int id)
-    {
-        var post = await _context.Posts.FindAsync(id);
-
-        if (post == null)
-        {
-            return false;
-        }
-
-        _context.Posts.Remove(post);
-        await _context.SaveChangesAsync();
-        return true;
-    }
 }
