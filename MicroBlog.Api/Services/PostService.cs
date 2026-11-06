@@ -56,4 +56,12 @@ public class PostService : IPostService
     {
         return _posts.Count;
     }
+
+    public IEnumerable<Post> SearchPosts(string term)
+    {
+        return _posts
+            .Where(p => p.Title.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                        p.Content.Contains(term, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
 }

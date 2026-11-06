@@ -59,4 +59,23 @@ public class PostsController : ControllerBase
         var count = _postService.GetTotalCount();
         return Ok(new { total = count, totalPosts = count });
     }
+
+    // GET: api/posts/search?term=xxx
+    [HttpGet("search")]
+    public IActionResult SearchPosts([FromQuery] string? term)
+    {
+        if (string.IsNullOrWhiteSpace(term))
+        {
+            return BadRequest(new { message = "يرجى إدخال كلمة للبحث." });
+        }
+
+        var results = _postService.SearchPosts(term);
+
+        if (!results.Any())
+        {
+            return NotFound(new { message = $"لم يتم العثور على أي منشورات تحتوي على الكلمة: '{term}'." });
+        }
+
+        return Ok(results);
+    }
 }

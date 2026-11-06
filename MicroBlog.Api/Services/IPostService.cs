@@ -9,4 +9,5 @@ public interface IPostService
     Post? GetPostById(int id);
     Post CreatePost(Post newPost);
     int GetTotalCount();
+    IEnumerable<Post> SearchPosts(string term);
 }
