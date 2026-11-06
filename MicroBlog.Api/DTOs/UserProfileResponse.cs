@@ -12,4 +12,9 @@ public class UserProfileResponse
 
     // Computed field: days since the account was created
     public int AccountAgeDays { get; set; }
+
+    // Follow system (session 25)
+    public int FollowersCount { get; set; }
+    public int FollowingCount { get; set; }
+    public bool IsFollowedByCurrentUser { get; set; }
 }

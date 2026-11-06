@@ -45,7 +45,7 @@ public class UsersController : ControllerBase
             return NotFound(new { message = "لم يتم العثور على المستخدم." });
         }
 
-        return Ok(ToProfile(user));
+        return Ok(await ToProfileAsync(user));
     }
 
     // PUT: api/users/me/bio
@@ -68,7 +68,7 @@ public class UsersController : ControllerBase
         user.Bio = request.Bio.Trim();
         await _context.SaveChangesAsync();
 
-        return Ok(ToProfile(user));
+        return Ok(await ToProfileAsync(user));
     }
 
     // GET: api/users/claims  (diagnostic: shows every claim read from the token)
@@ -93,7 +93,7 @@ public class UsersController : ControllerBase
             return NotFound(new { message = $"المستخدم ذو المعرّف {id} غير موجود." });
         }
 
-        return Ok(ToProfile(user));
+        return Ok(await ToProfileAsync(user));
     }
 
     // POST: api/users/{id}/follow  (protected)
@@ -211,10 +211,15 @@ public class UsersController : ControllerBase
     }
 
     // Entity -> DTO mapping, so PasswordHash never leaves the server
-    private static UserProfileResponse ToProfile(User user)
+    private async Task<UserProfileResponse> ToProfileAsync(User user)
     {
+        var stats = await BuildFollowStatsAsync(user.Id);
+
         return new UserProfileResponse
         {
+            FollowersCount = stats.FollowersCount,
+            FollowingCount = stats.FollowingCount,
+            IsFollowedByCurrentUser = stats.IsFollowedByCurrentUser,
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
