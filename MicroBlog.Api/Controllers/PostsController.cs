@@ -183,21 +183,28 @@ public class PostsController : ControllerBase
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (string.IsNullOrEmpty(currentUserId))
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
         {
-            return Unauthorized(new { message = "المستخدم غير موثق." });
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
         }
 
-        var deleted = await _postService.DeletePostAsync(id);
+        var post = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
 
-        if (!deleted)
+        // Existence first (404), then ownership (403)
+        if (post == null)
         {
             return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
         }
 
-        // Who may delete which post (ownership) is added in a later session
+        if (post.UserId != currentUserId)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden,
+                new { message = "ليس لديك صلاحية لحذف هذا المنشور." });
+        }
+
+        _context.Posts.Remove(post);
+        await _context.SaveChangesAsync();
+
         return Ok(new
         {
             Message = "تم حذف المنشور بنجاح",
