@@ -138,8 +138,10 @@ public class CommentsController : ControllerBase
             return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
         }
 
-        // The comment must belong to the post in the URL
+        // The comment must belong to the post in the URL.
+        // Include(Post) is needed below to know who owns the post (one JOIN, no extra query)
         var comment = await _context.Comments
+            .Include(c => c.Post)
             .FirstOrDefaultAsync(c => c.Id == commentId && c.PostId == postId);
 
         if (comment == null)
@@ -147,10 +149,15 @@ public class CommentsController : ControllerBase
             return NotFound(new { message = $"التعليق رقم {commentId} غير موجود على هذا المنشور." });
         }
 
-        if (comment.UserId != currentUserId)
+        // Dual authorization: the comment author may delete it (taking back their words),
+        // and so may the owner of the post (moderating their own space).
+        bool isCommentAuthor = comment.UserId == currentUserId;
+        bool isPostOwner = comment.Post.UserId == currentUserId;
+
+        if (!isCommentAuthor && !isPostOwner)
         {
             return StatusCode(StatusCodes.Status403Forbidden,
-                new { message = "ليس لديك صلاحية لحذف هذا التعليق." });
+                new { message = "ليس لديك صلاحية لحذف هذا التعليق. الحذف مقتصر على كاتب التعليق أو صاحب المنشور." });
         }
 
         _context.Comments.Remove(comment);
