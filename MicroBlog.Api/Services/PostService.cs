@@ -29,13 +29,7 @@ public class PostService : IPostService
 
     public async Task<Post> CreatePostAsync(Post newPost)
     {
-        if (string.IsNullOrWhiteSpace(newPost.Author))
-        {
-            newPost.Author = "Anonymous";
-        }
-
         newPost.CreatedAt = DateTime.UtcNow;
-        newPost.PublishedAt = DateTime.UtcNow;
 
         await _context.Posts.AddAsync(newPost);
         await _context.SaveChangesAsync();

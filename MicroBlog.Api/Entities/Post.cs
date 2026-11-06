@@ -1,16 +1,32 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace MicroBlog.Api.Entities;
 
+// The "many" side of the User (1) -> Posts (*) relationship
 public class Post
 {
-    // Primary key
+    [Key]
     public int Id { get; set; }
+
+    [MaxLength(150, ErrorMessage = "عنوان التدوينة يجب ألا يتجاوز 150 حرفاً.")]
     public string Title { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "محتوى المنشور مطلوب.")]
+    [MaxLength(280, ErrorMessage = "محتوى المنشور يجب ألا يتجاوز 280 حرفاً.")]
     public string Content { get; set; } = string.Empty;
-    public string Author { get; set; } = "Anonymous";
-    public int Likes { get; set; }
-    public DateTime PublishedAt { get; set; } = DateTime.UtcNow;
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-    // Foreign key pointing to the User who wrote the post
+    // Null until the post is edited
+    public DateTime? UpdatedAt { get; set; }
+
+    // Explicit foreign key: lets us set the owner without loading the whole User
+    // (without it EF Core would create a hidden "shadow" property)
+    [Required]
     public int UserId { get; set; }
+
+    // Reference navigation property: the user who wrote the post
+    [ForeignKey(nameof(UserId))]
+    public User User { get; set; } = null!;
 }

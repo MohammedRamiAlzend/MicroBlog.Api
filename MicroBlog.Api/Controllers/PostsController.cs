@@ -78,7 +78,6 @@ public class PostsController : ControllerBase
         {
             Title = dto.Title,
             Content = dto.Content,
-            Author = User.FindFirstValue(ClaimTypes.Name) ?? "AuthenticatedUser",
             UserId = currentUserId
         };
 
