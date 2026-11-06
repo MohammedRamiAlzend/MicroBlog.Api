@@ -74,6 +74,13 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Demo data for the final presentation: migrate + seed, Development only (never seed known passwords in production)
+if (app.Environment.IsDevelopment())
+{
+    using var scope = app.Services.CreateScope();
+    await DatabaseSeeder.SeedAsync(scope.ServiceProvider.GetRequiredService<AppDbContext>());
+}
+
 // ==========================================
 // 2. Middleware Request Pipeline
 // ==========================================
@@ -107,7 +114,7 @@ app.UseAuthorization();
 app.MapGet("/api/ping", () => Results.Ok(new
 {
     Message = "MicroBlog API is running successfully!",
-    Session = 29,
+    Session = 30,
     Timestamp = DateTime.UtcNow
 })).WithName("GetPingStatus");
 
