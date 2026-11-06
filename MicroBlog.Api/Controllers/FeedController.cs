@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Services;
@@ -34,6 +35,28 @@ public class FeedController : ControllerBase
         int? currentUserId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
 
         var feed = await _postService.GetFeedAsync(page, pageSize, currentUserId);
+        return Ok(feed);
+    }
+
+    // GET: api/feed/following?page=1&pageSize=10  (protected: needs to know WHO is asking)
+    // A user who follows nobody gets 200 and [] - that is a normal state, not an error.
+    [Authorize]
+    [HttpGet("following")]
+    public async Task<ActionResult<IEnumerable<FeedPostResponseDto>>> GetFollowingFeed(
+        [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    {
+        var invalid = ValidatePaging(page, ref pageSize);
+        if (invalid != null)
+        {
+            return invalid;
+        }
+
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
+        }
+
+        var feed = await _postService.GetFollowingFeedAsync(page, pageSize, currentUserId);
         return Ok(feed);
     }
 

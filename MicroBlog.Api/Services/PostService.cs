@@ -84,6 +84,21 @@ public class PostService : IPostService
         return GetFeedPageAsync(_context.Posts, page, pageSize, currentUserId ?? 0); // 0 never matches a real user
     }
 
+    // Only posts written by people the user follows.
+    // followedIds is an IQueryable that is NEVER materialized: EF Core folds it into the main
+    // statement as WHERE UserId IN (SELECT FollowingId FROM Follows WHERE FollowerId = @me).
+    // Calling ToList() on it first would pull every follow row into memory.
+    public Task<IEnumerable<FeedPostResponseDto>> GetFollowingFeedAsync(int page, int pageSize, int currentUserId)
+    {
+        var followedIds = _context.Follows
+            .Where(f => f.FollowerId == currentUserId)
+            .Select(f => f.FollowingId);
+
+        return GetFeedPageAsync(
+            _context.Posts.Where(p => followedIds.Contains(p.UserId)),
+            page, pageSize, currentUserId);
+    }
+
     // Shared by every feed: the caller decides WHICH posts (the source query),
     // this method decides HOW they look (order, shape, page).
     private static async Task<IEnumerable<FeedPostResponseDto>> GetFeedPageAsync(

@@ -11,6 +11,7 @@ public interface IPostService
     Task<Post> CreatePostAsync(Post newPost);
     Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId, int? currentUserId = null);
     Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId);
+    Task<IEnumerable<FeedPostResponseDto>> GetFollowingFeedAsync(int page, int pageSize, int currentUserId);
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term, int? currentUserId = null);
 }
