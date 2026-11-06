@@ -123,3 +123,13 @@ Content-Type: application/json
 }
 
 ###
+
+###
+
+POST {{MicroBlog.Api_HostAddress}}/api/posts/1/like
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1/like
+Authorization: Bearer {{token}}
