@@ -25,6 +25,11 @@ Accept: application/json
 
 ###
 
+GET {{MicroBlog.Api_HostAddress}}/api/posts/user/1
+Accept: application/json
+
+###
+
 GET {{MicroBlog.Api_HostAddress}}/api/posts/search?term=net
 Accept: application/json
 

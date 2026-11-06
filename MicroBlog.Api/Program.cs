@@ -99,7 +99,7 @@ app.UseAuthorization();
 app.MapGet("/api/ping", () => Results.Ok(new
 {
     Message = "MicroBlog API is running successfully!",
-    Session = 17,
+    Session = 18,
     Timestamp = DateTime.UtcNow
 })).WithName("GetPingStatus");
 
