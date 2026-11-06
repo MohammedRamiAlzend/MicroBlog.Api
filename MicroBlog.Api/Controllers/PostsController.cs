@@ -54,7 +54,7 @@ public class PostsController : ControllerBase
         }
 
         var myPosts = await _postService.GetPostsByUserAsync(currentUserId);
-        return Ok(myPosts.Select(ToDto));
+        return Ok(myPosts);
     }
 
     // GET: api/posts/count
@@ -117,7 +117,7 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"لم يتم العثور على أي منشورات تحتوي على الكلمة: '{term}'." });
         }
 
-        return Ok(results.Select(ToDto));
+        return Ok(results);
     }
 
     // DELETE: api/posts/{id}  (protected)

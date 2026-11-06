@@ -57,13 +57,13 @@ public class PostService : IPostService
         return newPost;
     }
 
-    public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
+    public async Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId)
     {
         return await _context.Posts
-            .Include(p => p.User)
             .AsNoTracking()
             .Where(p => p.UserId == userId)
             .OrderByDescending(p => p.CreatedAt)
+            .Select(ToResponse)
             .ToListAsync();
     }
 
@@ -72,12 +72,13 @@ public class PostService : IPostService
         return await _context.Posts.CountAsync();
     }
 
-    public async Task<IEnumerable<Post>> SearchPostsAsync(string term)
+    public async Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term)
     {
         return await _context.Posts
-            .Include(p => p.User)
             .AsNoTracking()
             .Where(p => p.Content.ToLower().Contains(term.ToLower()))
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(ToResponse)
             .ToListAsync();
     }
 
