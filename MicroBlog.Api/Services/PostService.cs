@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
+using MicroBlog.Api.DTOs.Common;
 using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Services;
@@ -79,16 +80,18 @@ public class PostService : IPostService
 
     // The whole feed page is ONE SQL statement: the author name is a JOIN, the counters are
     // COUNT subqueries and "liked by me" is an EXISTS subquery. No N+1 queries.
-    public Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId)
+    public Task<PagedResult<FeedPostResponseDto>> GetFeedAsync(
+        PaginationParams paging, int? currentUserId, CancellationToken cancellationToken = default)
     {
-        return GetFeedPageAsync(_context.Posts, page, pageSize, currentUserId ?? 0); // 0 never matches a real user
+        return GetFeedPageAsync(_context.Posts, paging, currentUserId ?? 0, cancellationToken); // 0 never matches a real user
     }
 
     // Only posts written by people the user follows.
     // followedIds is an IQueryable that is NEVER materialized: EF Core folds it into the main
     // statement as WHERE UserId IN (SELECT FollowingId FROM Follows WHERE FollowerId = @me).
     // Calling ToList() on it first would pull every follow row into memory.
-    public Task<IEnumerable<FeedPostResponseDto>> GetFollowingFeedAsync(int page, int pageSize, int currentUserId)
+    public Task<PagedResult<FeedPostResponseDto>> GetFollowingFeedAsync(
+        PaginationParams paging, int currentUserId, CancellationToken cancellationToken = default)
     {
         var followedIds = _context.Follows
             .Where(f => f.FollowerId == currentUserId)
@@ -96,22 +99,15 @@ public class PostService : IPostService
 
         return GetFeedPageAsync(
             _context.Posts.Where(p => followedIds.Contains(p.UserId)),
-            page, pageSize, currentUserId);
+            paging, currentUserId, cancellationToken);
     }
 
     // Shared by every feed: the caller decides WHICH posts (the source query),
     // this method decides HOW they look (order, shape, page).
-    private static async Task<IEnumerable<FeedPostResponseDto>> GetFeedPageAsync(
-        IQueryable<Post> source, int page, int pageSize, int viewerId)
+    private static Task<PagedResult<FeedPostResponseDto>> GetFeedPageAsync(
+        IQueryable<Post> source, PaginationParams paging, int viewerId, CancellationToken cancellationToken)
     {
-        // (page - 1) * pageSize can overflow int and wrap around to page 1: compute it as long
-        long skip = (long)(page - 1) * pageSize;
-        if (skip > int.MaxValue)
-        {
-            return new List<FeedPostResponseDto>();
-        }
-
-        return await source
+        var query = source
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .ThenByDescending(p => p.Id) // tie-breaker: pages never repeat or skip a post
@@ -125,10 +121,10 @@ public class PostService : IPostService
                 LikesCount = p.Likes.Count,
                 CommentsCount = p.Comments.Count,
                 IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == viewerId)
-            })
-            .Skip((int)skip)
-            .Take(pageSize)
-            .ToListAsync();
+            });
+
+        // COUNT + Skip/Take both run in the database (see PagedResult)
+        return PagedResult<FeedPostResponseDto>.CreateAsync(query, paging.Page, paging.PageSize, cancellationToken);
     }
 
     public async Task<int> GetTotalCountAsync()

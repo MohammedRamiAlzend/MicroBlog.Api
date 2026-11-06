@@ -1,4 +1,5 @@
 using MicroBlog.Api.DTOs;
+using MicroBlog.Api.DTOs.Common;
 using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Services;
@@ -10,8 +11,10 @@ public interface IPostService
     Task<PostResponseDto?> GetPostByIdAsync(int id, int? currentUserId = null);
     Task<Post> CreatePostAsync(Post newPost);
     Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId, int? currentUserId = null);
-    Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId);
-    Task<IEnumerable<FeedPostResponseDto>> GetFollowingFeedAsync(int page, int pageSize, int currentUserId);
+    Task<PagedResult<FeedPostResponseDto>> GetFeedAsync(
+        PaginationParams paging, int? currentUserId, CancellationToken cancellationToken = default);
+    Task<PagedResult<FeedPostResponseDto>> GetFollowingFeedAsync(
+        PaginationParams paging, int currentUserId, CancellationToken cancellationToken = default);
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term, int? currentUserId = null);
 }
