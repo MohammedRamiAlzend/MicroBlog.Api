@@ -70,7 +70,17 @@ public class AuthController : ControllerBase
         };
 
         _context.Users.Add(user);
-        await _context.SaveChangesAsync();
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two identical requests can both pass the AnyAsync checks above at the same time;
+            // the unique indexes (Username / Email) are the real guard and reject the second insert.
+            return Conflict(new { message = "اسم المستخدم أو البريد الإلكتروني مستخدم بالفعل." });
+        }
 
         // 5. Entity -> clean response DTO (no PasswordHash)
         var response = new UserResponseDto
