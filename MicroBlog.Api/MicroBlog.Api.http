@@ -153,3 +153,18 @@ Content-Type: application/json
 
 DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1/comments/1
 Authorization: Bearer {{token}}
+
+###
+
+POST {{MicroBlog.Api_HostAddress}}/api/users/2/follow
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{MicroBlog.Api_HostAddress}}/api/users/2/follow
+Authorization: Bearer {{token}}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/users/2/follow-stats
+Accept: application/json
