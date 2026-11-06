@@ -8,6 +8,17 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
+// CORS policy: lets the React/Vite app (port 5173) call this API from the browser
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowViteApp", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // ==========================================
@@ -28,6 +39,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+// Order matters: UseCors goes after UseHttpsRedirection and before UseAuthorization / MapControllers
+app.UseCors("AllowViteApp");
 
 app.UseAuthorization();
 
