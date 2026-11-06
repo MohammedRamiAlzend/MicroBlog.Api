@@ -30,17 +30,6 @@ Accept: application/json
 
 ###
 
-POST {{MicroBlog.Api_HostAddress}}/api/posts
-Content-Type: application/json
-
-{
-  "title": "My first post",
-  "content": "Hello MicroBlog!",
-  "author": "Rami"
-}
-
-###
-
 GET {{MicroBlog.Api_HostAddress}}/api/posts/count
 Accept: application/json
 
