@@ -46,6 +46,24 @@ namespace MicroBlog.Api.Migrations
                     b.ToTable("Comments");
                 });
 
+            modelBuilder.Entity("MicroBlog.Api.Entities.Follow", b =>
+                {
+                    b.Property<int>("FollowerId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("FollowingId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("FollowerId", "FollowingId");
+
+                    b.HasIndex("FollowingId");
+
+                    b.ToTable("Follows");
+                });
+
             modelBuilder.Entity("MicroBlog.Api.Entities.Like", b =>
                 {
                     b.Property<int>("UserId")
@@ -159,6 +177,25 @@ namespace MicroBlog.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MicroBlog.Api.Entities.Follow", b =>
+                {
+                    b.HasOne("MicroBlog.Api.Entities.User", "Follower")
+                        .WithMany("Following")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("MicroBlog.Api.Entities.User", "Following")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
+                });
+
             modelBuilder.Entity("MicroBlog.Api.Entities.Like", b =>
                 {
                     b.HasOne("MicroBlog.Api.Entities.Post", "Post")
@@ -199,6 +236,10 @@ namespace MicroBlog.Api.Migrations
             modelBuilder.Entity("MicroBlog.Api.Entities.User", b =>
                 {
                     b.Navigation("Comments");
+
+                    b.Navigation("Followers");
+
+                    b.Navigation("Following");
 
                     b.Navigation("Likes");
 

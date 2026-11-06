@@ -13,6 +13,7 @@ public class AppDbContext : DbContext
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Like> Likes => Set<Like>();
     public DbSet<Comment> Comments => Set<Comment>();
+    public DbSet<Follow> Follows => Set<Follow>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,6 +89,27 @@ public class AppDbContext : DbContext
                   .WithMany(u => u.Comments)
                   .HasForeignKey(c => c.UserId)
                   .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<Follow>(entity =>
+        {
+            // Composite key: the same pair can exist only once (no double follow)
+            entity.HasKey(f => new { f.FollowerId, f.FollowingId });
+
+            // Both relationships point to Users. Cascade on both would create a cycle
+            // ("multiple cascade paths"), so both are Restrict.
+            entity.HasOne(f => f.Follower)
+                  .WithMany(u => u.Following)
+                  .HasForeignKey(f => f.FollowerId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(f => f.Following)
+                  .WithMany(u => u.Followers)
+                  .HasForeignKey(f => f.FollowingId)
+                  .OnDelete(DeleteBehavior.Restrict);
+
+            // The PK index starts with FollowerId; add one for "who follows X" (followers count)
+            entity.HasIndex(f => f.FollowingId);
         });
     }
 }

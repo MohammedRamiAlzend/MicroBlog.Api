@@ -44,4 +44,10 @@ public class User
 
     // The comments this user wrote
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+
+    // Follow records where this user is the one being followed (their followers)
+    public ICollection<Follow> Followers { get; set; } = new List<Follow>();
+
+    // Follow records where this user is the follower (the accounts they follow)
+    public ICollection<Follow> Following { get; set; } = new List<Follow>();
 }
