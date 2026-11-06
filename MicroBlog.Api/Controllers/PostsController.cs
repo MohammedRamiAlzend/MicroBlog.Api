@@ -50,4 +50,26 @@ public class PostsController : ControllerBase
 
         return Ok(post);
     }
+
+    // POST: api/posts
+    [HttpPost]
+    public IActionResult CreatePost([FromBody] Post newPost)
+    {
+        if (string.IsNullOrWhiteSpace(newPost.Title) || string.IsNullOrWhiteSpace(newPost.Content))
+        {
+            return BadRequest(new { Message = "عنوان المنشور ومحتواه مطلوبان ولا يمكن أن يكونا فارغين." });
+        }
+
+        newPost.Id = Posts.Count > 0 ? Posts.Max(p => p.Id) + 1 : 1;
+
+        if (string.IsNullOrWhiteSpace(newPost.Author))
+        {
+            newPost.Author = "Anonymous";
+        }
+
+        newPost.CreatedAt = DateTime.UtcNow;
+        Posts.Add(newPost);
+
+        return CreatedAtAction(nameof(GetPostById), new { id = newPost.Id }, newPost);
+    }
 }
