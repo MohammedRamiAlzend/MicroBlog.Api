@@ -41,4 +41,7 @@ public class User
 
     // The posts this user liked (through the Likes join table)
     public ICollection<Like> Likes { get; set; } = new List<Like>();
+
+    // The comments this user wrote
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
 }

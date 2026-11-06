@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Post> Posts => Set<Post>();
     public DbSet<Like> Likes => Set<Like>();
+    public DbSet<Comment> Comments => Set<Comment>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -65,6 +66,28 @@ public class AppDbContext : DbContext
 
             // The PK index starts with UserId, so add one for "all likes of a post" (counts)
             entity.HasIndex(l => l.PostId);
+        });
+
+        modelBuilder.Entity<Comment>(entity =>
+        {
+            entity.Property(c => c.Content).IsRequired().HasMaxLength(500);
+
+            // Comments of a post are read by PostId, oldest first
+            entity.HasIndex(c => new { c.PostId, c.CreatedAt });
+
+            // Deleting a post deletes its comments
+            entity.HasOne(c => c.Post)
+                  .WithMany(p => p.Comments)
+                  .HasForeignKey(c => c.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // Two parents can lead to the same row (User -> Posts -> Comments and User -> Comments).
+            // Cascading both ways causes "multiple cascade paths" on some databases, so the user
+            // side is Restrict: a user who still has comments cannot be deleted by accident.
+            entity.HasOne(c => c.User)
+                  .WithMany(u => u.Comments)
+                  .HasForeignKey(c => c.UserId)
+                  .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
