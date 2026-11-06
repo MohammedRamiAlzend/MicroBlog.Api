@@ -48,6 +48,14 @@ public class UsersController : ControllerBase
         return Ok(ToProfile(user));
     }
 
+    // GET: api/users/claims  (diagnostic: shows every claim read from the token)
+    [HttpGet("claims")]
+    public IActionResult GetMyClaims()
+    {
+        var claims = User.Claims.Select(c => new { c.Type, c.Value }).ToList();
+        return Ok(claims);
+    }
+
     // GET: api/users/{id}  (public profile)
     [AllowAnonymous]
     [HttpGet("{id:int}")]
