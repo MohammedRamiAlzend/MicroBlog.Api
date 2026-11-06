@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
-using MicroBlog.Api.Middleware;
+using MicroBlog.Api.Middlewares;
 using MicroBlog.Api.Services;
 using Scalar.AspNetCore;
 
@@ -18,6 +18,10 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
     options.AddOperationTransformer<AuthorizeOperationTransformer>();
 });
+
+// Centralized exception handling: unhandled exceptions become RFC 7807 ProblemDetails responses
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 // Register the service layer in the DI container (Scoped = one instance per HTTP request)
 builder.Services.AddScoped<IPostService, PostService>();
@@ -73,8 +77,8 @@ var app = builder.Build();
 // ==========================================
 // 2. Middleware Request Pipeline
 // ==========================================
-// First in the pipeline so it can catch exceptions thrown by everything after it
-app.UseMiddleware<GlobalExceptionMiddleware>();
+// First in the pipeline so it catches exceptions thrown by everything after it (uses GlobalExceptionHandler)
+app.UseExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {
