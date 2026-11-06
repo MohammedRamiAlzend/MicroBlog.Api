@@ -1,17 +1,30 @@
+using Scalar.AspNetCore;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-
+// ==========================================
+// 1. Dependency Injection Container (Services)
+// ==========================================
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// ==========================================
+// 2. Middleware Request Pipeline
+// ==========================================
 if (app.Environment.IsDevelopment())
 {
+    // Generates the OpenAPI JSON document at /openapi/v1.json
     app.MapOpenApi();
+
+    // Scalar is only a UI: it reads the document produced by MapOpenApi()
+    app.MapScalarApiReference(options =>
+    {
+        options.WithTitle("MicroBlog API Reference")
+               .WithTheme(ScalarTheme.Moon)
+               .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+    });
 }
 
 app.UseHttpsRedirection();
