@@ -48,6 +48,29 @@ public class UsersController : ControllerBase
         return Ok(ToProfile(user));
     }
 
+    // PUT: api/users/me/bio
+    [HttpPut("me/bio")]
+    public async Task<ActionResult<UserProfileResponse>> UpdateMyBio([FromBody] UpdateBioRequest request)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int userId))
+        {
+            return Unauthorized(new { message = "بيانات هوية التوكن غير صالحة." });
+        }
+
+        // No AsNoTracking here: EF Core must track the entity to save the change
+        var user = await _context.Users.FindAsync(userId);
+
+        if (user == null)
+        {
+            return NotFound(new { message = "لم يتم العثور على المستخدم." });
+        }
+
+        user.Bio = request.Bio.Trim();
+        await _context.SaveChangesAsync();
+
+        return Ok(ToProfile(user));
+    }
+
     // GET: api/users/claims  (diagnostic: shows every claim read from the token)
     [HttpGet("claims")]
     public IActionResult GetMyClaims()
