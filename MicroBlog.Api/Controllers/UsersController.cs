@@ -12,6 +12,7 @@ namespace MicroBlog.Api.Controllers;
 // unless a method opts out with [AllowAnonymous]
 [Authorize]
 [ApiController]
+[Produces("application/json")]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
 {

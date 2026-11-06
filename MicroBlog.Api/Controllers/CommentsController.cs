@@ -10,6 +10,7 @@ namespace MicroBlog.Api.Controllers;
 
 // Nested route: a comment only makes sense inside its post => /api/posts/{postId}/comments
 [ApiController]
+[Produces("application/json")]
 [Route("api/posts/{postId:int}/comments")]
 public class CommentsController : ControllerBase
 {

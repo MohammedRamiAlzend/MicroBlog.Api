@@ -8,6 +8,7 @@ using MicroBlog.Api.Services;
 namespace MicroBlog.Api.Controllers;
 
 [ApiController]
+[Produces("application/json")]
 [Route("api/[controller]")]
 public class FeedController : ControllerBase
 {

@@ -11,6 +11,7 @@ using MicroBlog.Api.Services;
 namespace MicroBlog.Api.Controllers;
 
 [ApiController]
+[Produces("application/json")]
 [Route("api/[controller]")]
 public class PostsController : ControllerBase
 {
@@ -94,6 +95,10 @@ public class PostsController : ControllerBase
     // POST: api/posts  (protected)
     [Authorize]
     [HttpPost]
+    [ProducesResponseType(typeof(PostResponseDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> Create([FromBody] CreatePostRequest request)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -131,6 +136,11 @@ public class PostsController : ControllerBase
     // Order of checks: 401 (no valid token) -> 404 (post missing) -> 403 (not the owner)
     [Authorize]
     [HttpPut("{id:int}")]
+    [ProducesResponseType(typeof(PostResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Update(int id, [FromBody] UpdatePostRequest request)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
@@ -270,6 +280,10 @@ public class PostsController : ControllerBase
     // DELETE: api/posts/{id}  (protected)
     [Authorize]
     [HttpDelete("{id:int}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Delete(int id)
     {
         if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
