@@ -18,21 +18,37 @@ public class AuthController : ControllerBase
     }
 
     // POST: api/auth/register
-    // [ApiController] validates the DTO automatically and returns 400 before this code runs
+    // [ApiController] already rejects invalid DTOs with 400 before this code runs
     [HttpPost("register")]
-    public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterRequestDto request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
-        if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+        // 1. Duplicate username check (AnyAsync produces a cheap EXISTS query)
+        bool usernameExists = await _context.Users
+            .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower());
+
+        if (usernameExists)
         {
-            return BadRequest(new { message = "البريد الإلكتروني مُسجل بالفعل." });
+            return Conflict(new { message = "اسم المستخدم مستخدم بالفعل." });
         }
 
-        // DTO -> Entity
+        // 2. Duplicate email check
+        bool emailExists = await _context.Users
+            .AnyAsync(u => u.Email.ToLower() == request.Email.ToLower());
+
+        if (emailExists)
+        {
+            return Conflict(new { message = "البريد الإلكتروني مسجل بالفعل." });
+        }
+
+        // 3. One-way hash with an automatic random salt (never store the plain password)
+        string passwordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+        // 4. DTO -> Entity, then save
         var user = new User
         {
             Username = request.Username,
             Email = request.Email,
-            PasswordHash = $"hashed_{request.Password}", // placeholder: real hashing (BCrypt) comes in Session 12
+            PasswordHash = passwordHash,
             Bio = request.Bio,
             CreatedAt = DateTime.UtcNow
         };
@@ -40,7 +56,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        // Entity -> safe response DTO (PasswordHash is never returned)
+        // 5. Entity -> clean response DTO (no PasswordHash)
         var response = new UserResponseDto
         {
             Id = user.Id,
@@ -50,6 +66,6 @@ public class AuthController : ControllerBase
             CreatedAt = user.CreatedAt
         };
 
-        return CreatedAtAction(nameof(Register), new { id = response.Id }, response);
+        return StatusCode(StatusCodes.Status201Created, response);
     }
 }
