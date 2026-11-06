@@ -64,4 +64,17 @@ public class PostService : IPostService
                         p.Content.Contains(term, StringComparison.OrdinalIgnoreCase))
             .ToList();
     }
+
+    public bool DeletePost(int id)
+    {
+        var post = _posts.FirstOrDefault(p => p.Id == id);
+
+        if (post == null)
+        {
+            return false;
+        }
+
+        _posts.Remove(post);
+        return true;
+    }
 }

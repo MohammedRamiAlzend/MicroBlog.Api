@@ -78,4 +78,18 @@ public class PostsController : ControllerBase
 
         return Ok(results);
     }
+
+    // DELETE: api/posts/{id}
+    [HttpDelete("{id:int}")]
+    public IActionResult Delete(int id)
+    {
+        var deleted = _postService.DeletePost(id);
+
+        if (!deleted)
+        {
+            return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
+        }
+
+        return NoContent();
+    }
 }

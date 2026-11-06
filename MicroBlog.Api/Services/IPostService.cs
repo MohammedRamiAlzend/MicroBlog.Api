@@ -10,4 +10,5 @@ public interface IPostService
     Post CreatePost(Post newPost);
     int GetTotalCount();
     IEnumerable<Post> SearchPosts(string term);
+    bool DeletePost(int id);
 }
