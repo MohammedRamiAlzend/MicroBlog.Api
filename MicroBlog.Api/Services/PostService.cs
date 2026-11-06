@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 using MicroBlog.Api.Data;
+using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Services;
@@ -14,22 +16,34 @@ public class PostService : IPostService
         _context = context;
     }
 
-    public async Task<IEnumerable<Post>> GetAllPostsAsync()
+    // DTO projection: EF Core translates this into a SELECT of only these columns
+    // (plus a JOIN for the author name). No Post/User entities are loaded and no cycle is possible.
+    private static readonly Expression<Func<Post, PostResponseDto>> ToResponse = p => new PostResponseDto
+    {
+        Id = p.Id,
+        Content = p.Content,
+        CreatedAt = p.CreatedAt,
+        UpdatedAt = p.UpdatedAt,
+        UserId = p.UserId,
+        AuthorUsername = p.User.Username
+    };
+
+    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync()
     {
         return await _context.Posts
-            .Include(p => p.User)
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
+            .Select(ToResponse)
             .ToListAsync();
     }
 
-    public async Task<Post?> GetPostByIdAsync(int id)
+    public async Task<PostResponseDto?> GetPostByIdAsync(int id)
     {
-        // FindAsync cannot Include related data, so use a normal query
         return await _context.Posts
-            .Include(p => p.User)
             .AsNoTracking()
-            .FirstOrDefaultAsync(p => p.Id == id);
+            .Where(p => p.Id == id)
+            .Select(ToResponse)
+            .FirstOrDefaultAsync();
     }
 
     public async Task<Post> CreatePostAsync(Post newPost)

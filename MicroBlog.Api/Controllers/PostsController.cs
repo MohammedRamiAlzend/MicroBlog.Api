@@ -26,7 +26,7 @@ public class PostsController : ControllerBase
     public async Task<ActionResult<IEnumerable<PostResponseDto>>> GetAll()
     {
         var posts = await _postService.GetAllPostsAsync();
-        return Ok(posts.Select(ToDto));
+        return Ok(posts);
     }
 
     // GET: api/posts/{id}
@@ -40,7 +40,7 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
         }
 
-        return Ok(ToDto(post));
+        return Ok(post);
     }
 
     // GET: api/posts/my-posts  (protected: only the caller's own posts)
