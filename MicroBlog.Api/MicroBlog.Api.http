@@ -148,3 +148,8 @@ Content-Type: application/json
 {
   "content": "Nice post!"
 }
+
+###
+
+DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1/comments/1
+Authorization: Bearer {{token}}
