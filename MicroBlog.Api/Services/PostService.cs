@@ -42,6 +42,15 @@ public class PostService : IPostService
         return newPost;
     }
 
+    public async Task<IEnumerable<Post>> GetPostsByUserAsync(int userId)
+    {
+        return await _context.Posts
+            .AsNoTracking()
+            .Where(p => p.UserId == userId)
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
+    }
+
     public async Task<int> GetTotalCountAsync()
     {
         return await _context.Posts.CountAsync();

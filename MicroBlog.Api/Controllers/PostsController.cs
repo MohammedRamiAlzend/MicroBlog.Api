@@ -40,6 +40,20 @@ public class PostsController : ControllerBase
         return Ok(post);
     }
 
+    // GET: api/posts/my-posts  (protected: only the caller's own posts)
+    [Authorize]
+    [HttpGet("my-posts")]
+    public async Task<IActionResult> GetMyPosts()
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح." });
+        }
+
+        var myPosts = await _postService.GetPostsByUserAsync(currentUserId);
+        return Ok(myPosts);
+    }
+
     // GET: api/posts/count
     [HttpGet("count")]
     public async Task<ActionResult> GetTotalCount()
