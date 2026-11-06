@@ -36,4 +36,18 @@ public class PostsController : ControllerBase
     {
         return Ok(Posts);
     }
+
+    // GET: api/posts/{id}
+    [HttpGet("{id:int}")]
+    public ActionResult<Post> GetPostById(int id)
+    {
+        var post = Posts.FirstOrDefault(p => p.Id == id);
+
+        if (post == null)
+        {
+            return NotFound(new { Message = $"المنشور ذو الرقم {id} غير موجود." });
+        }
+
+        return Ok(post);
+    }
 }
