@@ -133,3 +133,18 @@ Authorization: Bearer {{token}}
 
 DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1/like
 Authorization: Bearer {{token}}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/posts/1/comments
+Accept: application/json
+
+###
+
+POST {{MicroBlog.Api_HostAddress}}/api/posts/1/comments
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "content": "Nice post!"
+}
