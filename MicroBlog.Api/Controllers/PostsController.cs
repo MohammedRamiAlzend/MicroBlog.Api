@@ -85,6 +85,11 @@ public class PostsController : ControllerBase
             return Unauthorized(new { message = "المستخدم صاحب الحساب غير موجود في النظام." });
         }
 
+        if (author.IsBanned)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "حسابك محظور من إنشاء منشورات جديدة." });
+        }
+
         var post = new Post
         {
             Content = request.Content,

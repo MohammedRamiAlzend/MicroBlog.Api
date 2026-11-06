@@ -27,6 +27,9 @@ public class User
     // Goes into the token as ClaimTypes.Role
     public string Role { get; set; } = "User";
 
+    // A banned account can sign in but cannot publish new posts
+    public bool IsBanned { get; set; }
+
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     // Updated on every successful login (null = never logged in)
