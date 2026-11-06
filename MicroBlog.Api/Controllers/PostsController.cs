@@ -145,6 +145,12 @@ public class PostsController : ControllerBase
                 new { message = "ليس لديك صلاحية لتعديل هذا المنشور." });
         }
 
+        // Nothing changed: skip the database write and keep UpdatedAt untouched
+        if (post.Content == request.Content)
+        {
+            return Ok(ToDto(post));
+        }
+
         post.Content = request.Content;
         post.UpdatedAt = DateTime.UtcNow;
 
