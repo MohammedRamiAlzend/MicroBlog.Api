@@ -1,8 +1,10 @@
+using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
+using MicroBlog.Api.Services;
 
 namespace MicroBlog.Api.Controllers;
 
@@ -11,13 +13,15 @@ namespace MicroBlog.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IJwtTokenService _jwtTokenService;
 
     // Common weak passwords that are rejected (session lab)
     private static readonly string[] ForbiddenPasswords = { "123456", "password", "qwerty", "12345678" };
 
-    public AuthController(AppDbContext context)
+    public AuthController(AppDbContext context, IJwtTokenService jwtTokenService)
     {
         _context = context;
+        _jwtTokenService = jwtTokenService;
     }
 
     // POST: api/auth/register
@@ -76,5 +80,47 @@ public class AuthController : ControllerBase
         };
 
         return StatusCode(StatusCodes.Status201Created, response);
+    }
+
+    // POST: api/auth/login
+    [HttpPost("login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
+    {
+        // Sign in with either the username or the email
+        var identifier = !string.IsNullOrWhiteSpace(request.Username) ? request.Username : request.Email;
+
+        var user = await _context.Users.FirstOrDefaultAsync(u =>
+            u.Username.ToLower() == identifier.ToLower() ||
+            u.Email.ToLower() == identifier.ToLower());
+
+        // One identical 401 for "unknown user" and "wrong password":
+        // different messages would let attackers discover which accounts exist (enumeration)
+        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        {
+            return Unauthorized(new { message = "بيانات الدخول غير صحيحة (Invalid username or password)." });
+        }
+
+        user.LastLoginAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+
+        var token = _jwtTokenService.GenerateToken(user);
+
+        var response = new AuthResponse
+        {
+            Token = token,
+            Username = user.Username,
+            Email = user.Email,
+            ExpiresAt = new JwtSecurityTokenHandler().ReadJwtToken(token).ValidTo,
+            User = new UserResponseDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Bio = user.Bio,
+                CreatedAt = user.CreatedAt
+            }
+        };
+
+        return Ok(response);
     }
 }
