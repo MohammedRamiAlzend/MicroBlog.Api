@@ -93,6 +93,7 @@ public class PostService : IPostService
         return await _context.Posts
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
+            .ThenByDescending(p => p.Id) // tie-breaker: pages never repeat or skip a post
             .Select(p => new FeedPostResponseDto
             {
                 Id = p.Id,
