@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
 using MicroBlog.Api.Services;
@@ -12,10 +13,12 @@ namespace MicroBlog.Api.Controllers;
 public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
+    private readonly AppDbContext _context;
 
-    public PostsController(IPostService postService)
+    public PostsController(IPostService postService, AppDbContext context)
     {
         _postService = postService;
+        _context = context;
     }
 
     // GET: api/posts
@@ -72,6 +75,14 @@ public class PostsController : ControllerBase
         if (!int.TryParse(userIdClaim, out int currentUserId))
         {
             return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية الناشر." });
+        }
+
+        // A valid token is not enough: the account must still exist in the database
+        var author = await _context.Users.FindAsync(currentUserId);
+
+        if (author == null)
+        {
+            return Unauthorized(new { message = "المستخدم صاحب الحساب غير موجود في النظام." });
         }
 
         var post = new Post
