@@ -33,6 +33,7 @@ public class PostService : IPostService
             UserId = p.UserId,
             AuthorUsername = p.User.Username,
             LikesCount = p.Likes.Count,
+            CommentsCount = p.Comments.Count,
             IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == viewerId)
         };
     }

@@ -11,5 +11,6 @@ public class PostResponseDto
     public int UserId { get; set; }
     public string AuthorUsername { get; set; } = string.Empty;
     public int LikesCount { get; set; }
+    public int CommentsCount { get; set; }
     public bool IsLikedByCurrentUser { get; set; }
 }

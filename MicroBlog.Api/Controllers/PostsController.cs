@@ -300,6 +300,7 @@ public class PostsController : ControllerBase
     {
         var dto = ToDto(post);
         dto.LikesCount = await _context.Likes.CountAsync(l => l.PostId == post.Id);
+        dto.CommentsCount = await _context.Comments.CountAsync(c => c.PostId == post.Id);
         dto.IsLikedByCurrentUser = await _context.Likes.AnyAsync(l => l.PostId == post.Id && l.UserId == viewerId);
         return dto;
     }
