@@ -51,7 +51,7 @@ public class PostService : IPostService
     {
         return await _context.Posts
             .AsNoTracking()
-            .Where(p => p.Title.Contains(term) || p.Content.Contains(term))
+            .Where(p => p.Title.ToLower().Contains(term.ToLower()) || p.Content.ToLower().Contains(term.ToLower()))
             .ToListAsync();
     }
 
