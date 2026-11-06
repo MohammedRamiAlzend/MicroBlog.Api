@@ -1,4 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
@@ -26,6 +28,7 @@ public class AuthController : ControllerBase
 
     // POST: api/auth/register
     // [ApiController] already rejects invalid DTOs with 400 before this code runs
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
@@ -83,6 +86,7 @@ public class AuthController : ControllerBase
     }
 
     // POST: api/auth/login
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
@@ -122,5 +126,32 @@ public class AuthController : ControllerBase
         };
 
         return Ok(response);
+    }
+
+    // GET: api/auth/me  (protected)
+    // Without a valid token the middleware answers 401 before this method runs
+    [Authorize]
+    [HttpGet("me")]
+    public IActionResult GetCurrentUser()
+    {
+        // The identity comes from the token claims, not from the request body
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var username = User.FindFirstValue(ClaimTypes.Name);
+        var email = User.FindFirstValue(ClaimTypes.Email);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (string.IsNullOrEmpty(userId))
+        {
+            return Unauthorized(new { message = "بيانات الهوية غير مكتملة في التوكن." });
+        }
+
+        return Ok(new
+        {
+            Id = userId,
+            Username = username,
+            Email = email,
+            Role = role,
+            IsAuthenticated = User.Identity?.IsAuthenticated ?? false
+        });
     }
 }
