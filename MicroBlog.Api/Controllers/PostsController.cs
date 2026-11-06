@@ -65,7 +65,7 @@ public class PostsController : ControllerBase
     // POST: api/posts  (protected)
     [Authorize]
     [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
+    public async Task<IActionResult> Create([FromBody] CreatePostRequest request)
     {
         var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -76,7 +76,7 @@ public class PostsController : ControllerBase
 
         var post = new Post
         {
-            Content = dto.Content,
+            Content = request.Content,
             UserId = currentUserId
         };
 
