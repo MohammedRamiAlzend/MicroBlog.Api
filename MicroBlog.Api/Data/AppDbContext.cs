@@ -32,7 +32,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Post>(entity =>
         {
             entity.HasKey(p => p.Id);
-            entity.Property(p => p.Title).HasMaxLength(150);
             entity.Property(p => p.Content).IsRequired().HasMaxLength(280);
             entity.Property(p => p.CreatedAt).IsRequired();
 

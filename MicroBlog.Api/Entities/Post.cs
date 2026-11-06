@@ -9,9 +9,6 @@ public class Post
     [Key]
     public int Id { get; set; }
 
-    [MaxLength(150, ErrorMessage = "عنوان التدوينة يجب ألا يتجاوز 150 حرفاً.")]
-    public string Title { get; set; } = string.Empty;
-
     [Required(ErrorMessage = "محتوى المنشور مطلوب.")]
     [MaxLength(280, ErrorMessage = "محتوى المنشور يجب ألا يتجاوز 280 حرفاً.")]
     public string Content { get; set; } = string.Empty;

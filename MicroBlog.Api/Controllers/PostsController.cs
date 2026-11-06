@@ -76,7 +76,6 @@ public class PostsController : ControllerBase
 
         var post = new Post
         {
-            Title = dto.Title,
             Content = dto.Content,
             UserId = currentUserId
         };
@@ -140,7 +139,6 @@ public class PostsController : ControllerBase
         return new PostResponseDto
         {
             Id = post.Id,
-            Title = post.Title,
             Content = post.Content,
             CreatedAt = post.CreatedAt,
             UpdatedAt = post.UpdatedAt,

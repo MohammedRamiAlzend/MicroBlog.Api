@@ -63,7 +63,7 @@ public class PostService : IPostService
         return await _context.Posts
             .Include(p => p.User)
             .AsNoTracking()
-            .Where(p => p.Title.ToLower().Contains(term.ToLower()) || p.Content.ToLower().Contains(term.ToLower()))
+            .Where(p => p.Content.ToLower().Contains(term.ToLower()))
             .ToListAsync();
     }
 
