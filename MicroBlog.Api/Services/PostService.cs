@@ -77,6 +77,31 @@ public class PostService : IPostService
             .ToListAsync();
     }
 
+    // The whole feed page is ONE SQL statement: the author name is a JOIN, the counters are
+    // COUNT subqueries and "liked by me" is an EXISTS subquery. No N+1 queries.
+    public async Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId)
+    {
+        int viewerId = currentUserId ?? 0; // 0 never matches a real user id
+
+        return await _context.Posts
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .Select(p => new FeedPostResponseDto
+            {
+                Id = p.Id,
+                Content = p.Content,
+                CreatedAt = p.CreatedAt,
+                AuthorId = p.UserId,
+                AuthorUsername = p.User.Username,
+                LikesCount = p.Likes.Count,
+                CommentsCount = p.Comments.Count,
+                IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == viewerId)
+            })
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+    }
+
     public async Task<int> GetTotalCountAsync()
     {
         return await _context.Posts.CountAsync();

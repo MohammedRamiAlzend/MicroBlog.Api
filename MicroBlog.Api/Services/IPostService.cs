@@ -10,6 +10,7 @@ public interface IPostService
     Task<PostResponseDto?> GetPostByIdAsync(int id, int? currentUserId = null);
     Task<Post> CreatePostAsync(Post newPost);
     Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId, int? currentUserId = null);
+    Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId);
     Task<int> GetTotalCountAsync();
     Task<IEnumerable<PostResponseDto>> SearchPostsAsync(string term, int? currentUserId = null);
 }
