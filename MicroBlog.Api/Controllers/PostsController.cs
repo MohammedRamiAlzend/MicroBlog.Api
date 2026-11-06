@@ -1,4 +1,7 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
 using MicroBlog.Api.Services;
 
@@ -45,16 +48,27 @@ public class PostsController : ControllerBase
         return Ok(new { total = count, totalPosts = count });
     }
 
-    // POST: api/posts
+    // POST: api/posts  (protected)
+    [Authorize]
     [HttpPost]
-    public async Task<ActionResult<Post>> Create([FromBody] Post newPost)
+    public async Task<IActionResult> Create([FromBody] CreatePostDto dto)
     {
-        if (string.IsNullOrWhiteSpace(newPost.Title) || string.IsNullOrWhiteSpace(newPost.Content))
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out int currentUserId))
         {
-            return BadRequest(new { message = "عنوان المنشور ومحتواه مطلوبان ولا يمكن أن يكونا فارغين." });
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية الناشر." });
         }
 
-        var createdPost = await _postService.CreatePostAsync(newPost);
+        var post = new Post
+        {
+            Title = dto.Title,
+            Content = dto.Content,
+            Author = User.FindFirstValue(ClaimTypes.Name) ?? "AuthenticatedUser",
+            UserId = currentUserId
+        };
+
+        var createdPost = await _postService.CreatePostAsync(post);
         return CreatedAtAction(nameof(GetById), new { id = createdPost.Id }, createdPost);
     }
 
