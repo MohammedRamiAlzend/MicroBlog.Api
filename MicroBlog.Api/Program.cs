@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
+using MicroBlog.Api.Middleware;
 using MicroBlog.Api.Services;
 using Scalar.AspNetCore;
 
@@ -72,6 +73,9 @@ var app = builder.Build();
 // ==========================================
 // 2. Middleware Request Pipeline
 // ==========================================
+// First in the pipeline so it can catch exceptions thrown by everything after it
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     // Generates the OpenAPI JSON document at /openapi/v1.json
