@@ -12,7 +12,11 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Dependency Injection Container (Services)
 // ==========================================
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>();
+    options.AddOperationTransformer<AuthorizeOperationTransformer>();
+});
 
 // Register the service layer in the DI container (Scoped = one instance per HTTP request)
 builder.Services.AddScoped<IPostService, PostService>();
