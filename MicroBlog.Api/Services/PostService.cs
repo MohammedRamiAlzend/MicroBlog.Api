@@ -51,4 +51,9 @@ public class PostService : IPostService
         _posts.Add(newPost);
         return newPost;
     }
+
+    public int GetTotalCount()
+    {
+        return _posts.Count;
+    }
 }

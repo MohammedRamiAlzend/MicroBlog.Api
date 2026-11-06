@@ -51,4 +51,12 @@ public class PostsController : ControllerBase
         var createdPost = _postService.CreatePost(newPost);
         return CreatedAtAction(nameof(GetById), new { id = createdPost.Id }, createdPost);
     }
+
+    // GET: api/posts/count
+    [HttpGet("count")]
+    public ActionResult GetTotalCount()
+    {
+        var count = _postService.GetTotalCount();
+        return Ok(new { total = count, totalPosts = count });
+    }
 }

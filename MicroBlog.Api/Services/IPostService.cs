@@ -8,4 +8,5 @@ public interface IPostService
     IEnumerable<Post> GetAllPosts();
     Post? GetPostById(int id);
     Post CreatePost(Post newPost);
+    int GetTotalCount();
 }
