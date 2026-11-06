@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using MicroBlog.Api.Models;
+using MicroBlog.Api.Entities;
 using MicroBlog.Api.Services;
 
 namespace MicroBlog.Api.Controllers;
@@ -10,7 +10,6 @@ public class PostsController : ControllerBase
 {
     private readonly IPostService _postService;
 
-    // Constructor Injection: the DI container passes in the registered service
     public PostsController(IPostService postService)
     {
         _postService = postService;
@@ -18,17 +17,17 @@ public class PostsController : ControllerBase
 
     // GET: api/posts
     [HttpGet]
-    public ActionResult<IEnumerable<Post>> GetAll()
+    public async Task<ActionResult<IEnumerable<Post>>> GetAll()
     {
-        var posts = _postService.GetAllPosts();
+        var posts = await _postService.GetAllPostsAsync();
         return Ok(posts);
     }
 
     // GET: api/posts/{id}
     [HttpGet("{id:int}")]
-    public ActionResult<Post> GetById(int id)
+    public async Task<ActionResult<Post>> GetById(int id)
     {
-        var post = _postService.GetPostById(id);
+        var post = await _postService.GetPostByIdAsync(id);
 
         if (post == null)
         {
@@ -38,38 +37,37 @@ public class PostsController : ControllerBase
         return Ok(post);
     }
 
+    // GET: api/posts/count
+    [HttpGet("count")]
+    public async Task<ActionResult> GetTotalCount()
+    {
+        var count = await _postService.GetTotalCountAsync();
+        return Ok(new { total = count, totalPosts = count });
+    }
+
     // POST: api/posts
     [HttpPost]
-    public ActionResult<Post> Create([FromBody] Post newPost)
+    public async Task<ActionResult<Post>> Create([FromBody] Post newPost)
     {
-        // The controller only validates the request; the service owns the business rules
         if (string.IsNullOrWhiteSpace(newPost.Title) || string.IsNullOrWhiteSpace(newPost.Content))
         {
             return BadRequest(new { message = "عنوان المنشور ومحتواه مطلوبان ولا يمكن أن يكونا فارغين." });
         }
 
-        var createdPost = _postService.CreatePost(newPost);
+        var createdPost = await _postService.CreatePostAsync(newPost);
         return CreatedAtAction(nameof(GetById), new { id = createdPost.Id }, createdPost);
-    }
-
-    // GET: api/posts/count
-    [HttpGet("count")]
-    public ActionResult GetTotalCount()
-    {
-        var count = _postService.GetTotalCount();
-        return Ok(new { total = count, totalPosts = count });
     }
 
     // GET: api/posts/search?term=xxx
     [HttpGet("search")]
-    public IActionResult SearchPosts([FromQuery] string? term)
+    public async Task<IActionResult> SearchPosts([FromQuery] string? term)
     {
         if (string.IsNullOrWhiteSpace(term))
         {
             return BadRequest(new { message = "يرجى إدخال كلمة للبحث." });
         }
 
-        var results = _postService.SearchPosts(term);
+        var results = await _postService.SearchPostsAsync(term);
 
         if (!results.Any())
         {
@@ -81,9 +79,9 @@ public class PostsController : ControllerBase
 
     // DELETE: api/posts/{id}
     [HttpDelete("{id:int}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var deleted = _postService.DeletePost(id);
+        var deleted = await _postService.DeletePostAsync(id);
 
         if (!deleted)
         {

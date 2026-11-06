@@ -1,14 +1,14 @@
-using MicroBlog.Api.Models;
+using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Services;
 
-// The contract: WHAT the service offers, not HOW it does it
+// Database calls are asynchronous, so every method now returns a Task
 public interface IPostService
 {
-    IEnumerable<Post> GetAllPosts();
-    Post? GetPostById(int id);
-    Post CreatePost(Post newPost);
-    int GetTotalCount();
-    IEnumerable<Post> SearchPosts(string term);
-    bool DeletePost(int id);
+    Task<IEnumerable<Post>> GetAllPostsAsync();
+    Task<Post?> GetPostByIdAsync(int id);
+    Task<Post> CreatePostAsync(Post newPost);
+    Task<int> GetTotalCountAsync();
+    Task<IEnumerable<Post>> SearchPostsAsync(string term);
+    Task<bool> DeletePostAsync(int id);
 }

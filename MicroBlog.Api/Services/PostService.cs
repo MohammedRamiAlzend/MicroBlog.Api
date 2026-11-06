@@ -1,80 +1,71 @@
-using MicroBlog.Api.Models;
+using Microsoft.EntityFrameworkCore;
+using MicroBlog.Api.Data;
+using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Services;
 
 public class PostService : IPostService
 {
-    // In-memory storage moved here from PostsController
-    private static readonly List<Post> _posts = new()
-    {
-        new Post
-        {
-            Id = 1,
-            Title = "الإعلان عن .NET 10",
-            Content = "ميزات أداء جديدة ومذهلة في بناء تطبيقات الويب.",
-            Author = "أحمد علي",
-            Likes = 15,
-            CreatedAt = DateTime.UtcNow.AddDays(-2)
-        },
-        new Post
-        {
-            Id = 2,
-            Title = "دليل Dependency Injection",
-            Content = "كيفية بناء معمارية نظيفة قابلة للصيانة والاختبار عبر فصل المسؤوليات.",
-            Author = "سارة محمود",
-            Likes = 42,
-            CreatedAt = DateTime.UtcNow.AddDays(-1)
-        }
-    };
+    private readonly AppDbContext _context;
 
-    public IEnumerable<Post> GetAllPosts()
+    // The DI container injects the DbContext, just like it injects the service into the controller
+    public PostService(AppDbContext context)
     {
-        return _posts;
+        _context = context;
     }
 
-    public Post? GetPostById(int id)
+    public async Task<IEnumerable<Post>> GetAllPostsAsync()
     {
-        return _posts.FirstOrDefault(p => p.Id == id);
+        return await _context.Posts
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .ToListAsync();
     }
 
-    public Post CreatePost(Post newPost)
+    public async Task<Post?> GetPostByIdAsync(int id)
     {
-        newPost.Id = _posts.Count > 0 ? _posts.Max(p => p.Id) + 1 : 1;
+        return await _context.Posts.FindAsync(id);
+    }
 
+    public async Task<Post> CreatePostAsync(Post newPost)
+    {
         if (string.IsNullOrWhiteSpace(newPost.Author))
         {
             newPost.Author = "Anonymous";
         }
 
         newPost.CreatedAt = DateTime.UtcNow;
+        newPost.PublishedAt = DateTime.UtcNow;
 
-        _posts.Add(newPost);
+        await _context.Posts.AddAsync(newPost);
+        await _context.SaveChangesAsync();
         return newPost;
     }
 
-    public int GetTotalCount()
+    public async Task<int> GetTotalCountAsync()
     {
-        return _posts.Count;
+        return await _context.Posts.CountAsync();
     }
 
-    public IEnumerable<Post> SearchPosts(string term)
+    public async Task<IEnumerable<Post>> SearchPostsAsync(string term)
     {
-        return _posts
-            .Where(p => p.Title.Contains(term, StringComparison.OrdinalIgnoreCase) ||
-                        p.Content.Contains(term, StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        return await _context.Posts
+            .AsNoTracking()
+            .Where(p => p.Title.Contains(term) || p.Content.Contains(term))
+            .ToListAsync();
     }
 
-    public bool DeletePost(int id)
+    public async Task<bool> DeletePostAsync(int id)
     {
-        var post = _posts.FirstOrDefault(p => p.Id == id);
+        var post = await _context.Posts.FindAsync(id);
 
         if (post == null)
         {
             return false;
         }
 
-        _posts.Remove(post);
+        _context.Posts.Remove(post);
+        await _context.SaveChangesAsync();
         return true;
     }
 }
