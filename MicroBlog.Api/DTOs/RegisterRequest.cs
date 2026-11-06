@@ -16,4 +16,8 @@ public class RegisterRequest
     [Required(ErrorMessage = "كلمة المرور مطلوبة.")]
     [MinLength(8, ErrorMessage = "يجب ألا تقل كلمة المرور عن 8 خانات.")]
     public string Password { get; set; } = string.Empty;
+
+    // Guided exercise: optional bio, max 100 characters
+    [MaxLength(100, ErrorMessage = "السيرة الذاتية يجب ألا تتجاوز 100 حرف.")]
+    public string? Bio { get; set; }
 }

@@ -33,6 +33,7 @@ public class AuthController : ControllerBase
             Username = request.Username,
             Email = request.Email,
             PasswordHash = $"hashed_{request.Password}", // placeholder: real hashing (BCrypt) comes in Session 12
+            Bio = request.Bio,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -45,6 +46,7 @@ public class AuthController : ControllerBase
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
+            Bio = user.Bio,
             CreatedAt = user.CreatedAt
         };
 
