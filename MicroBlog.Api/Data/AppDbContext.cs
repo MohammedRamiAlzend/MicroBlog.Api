@@ -38,8 +38,10 @@ public class AppDbContext : DbContext
             entity.Property(p => p.Content).IsRequired().HasMaxLength(280);
             entity.Property(p => p.CreatedAt).IsRequired();
 
-            // Index on the foreign key: faster joins and filtering by user
-            entity.HasIndex(p => p.UserId).HasDatabaseName("IX_Posts_UserId");
+            // Composite index (UserId, CreatedAt): serves "posts of these users, newest first"
+            // (following feed, my-posts, user posts). Its first column also covers plain UserId
+            // lookups and joins, so it replaces the old single-column IX_Posts_UserId.
+            entity.HasIndex(p => new { p.UserId, p.CreatedAt }).HasDatabaseName("IX_Posts_UserId_CreatedAt");
 
             // One User has many Posts. Cascade: deleting a user deletes their posts,
             // so no orphan rows are left behind

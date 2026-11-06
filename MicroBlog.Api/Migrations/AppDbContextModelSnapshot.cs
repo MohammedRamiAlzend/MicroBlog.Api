@@ -104,8 +104,8 @@ namespace MicroBlog.Api.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId")
-                        .HasDatabaseName("IX_Posts_UserId");
+                    b.HasIndex("UserId", "CreatedAt")
+                        .HasDatabaseName("IX_Posts_UserId_CreatedAt");
 
                     b.ToTable("Posts");
                 });
