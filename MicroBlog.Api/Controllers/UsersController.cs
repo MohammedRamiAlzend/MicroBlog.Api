@@ -166,6 +166,39 @@ public class UsersController : ControllerBase
         return Ok(await BuildFollowResponseAsync(id, false, "تم إلغاء المتابعة بنجاح."));
     }
 
+    // GET: api/users/{id}/follow-stats  (public; the "followed by me" flag needs a token)
+    [AllowAnonymous]
+    [HttpGet("{id:int}/follow-stats")]
+    public async Task<ActionResult<FollowStatsDto>> GetFollowStats(int id)
+    {
+        if (!await _context.Users.AnyAsync(u => u.Id == id))
+        {
+            return NotFound(new { message = $"المستخدم رقم {id} غير موجود." });
+        }
+
+        return Ok(await BuildFollowStatsAsync(id));
+    }
+
+    private async Task<FollowStatsDto> BuildFollowStatsAsync(int userId)
+    {
+        // Anonymous callers (or a bad token) simply get false
+        bool isFollowedByMe = false;
+
+        if (int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int viewerId))
+        {
+            isFollowedByMe = await _context.Follows
+                .AnyAsync(f => f.FollowerId == viewerId && f.FollowingId == userId);
+        }
+
+        return new FollowStatsDto
+        {
+            UserId = userId,
+            FollowersCount = await _context.Follows.CountAsync(f => f.FollowingId == userId),
+            FollowingCount = await _context.Follows.CountAsync(f => f.FollowerId == userId),
+            IsFollowedByCurrentUser = isFollowedByMe
+        };
+    }
+
     private async Task<FollowResponseDto> BuildFollowResponseAsync(int targetUserId, bool isFollowing, string message)
     {
         return new FollowResponseDto
