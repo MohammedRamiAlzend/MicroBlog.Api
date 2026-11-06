@@ -49,3 +49,20 @@ Accept: application/json
 DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1
 
 ###
+
+POST {{MicroBlog.Api_HostAddress}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "Passw0rd123",
+  "bio": "Hello, I am John"
+}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/users/1
+Accept: application/json
+
+###
