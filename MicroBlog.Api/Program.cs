@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using MicroBlog.Api.Data;
 using MicroBlog.Api.Services;
 using Scalar.AspNetCore;
 
@@ -11,6 +13,11 @@ builder.Services.AddOpenApi();
 
 // Register the service layer in the DI container (Scoped = one instance per HTTP request)
 builder.Services.AddScoped<IPostService, PostService>();
+
+// Register the database context (SQLite). The connection string comes from appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
 
 // CORS policy: lets the React/Vite app (port 5173) call this API from the browser
 builder.Services.AddCors(options =>
