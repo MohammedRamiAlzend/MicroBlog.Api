@@ -66,3 +66,13 @@ GET {{MicroBlog.Api_HostAddress}}/api/users/1
 Accept: application/json
 
 ###
+
+POST {{MicroBlog.Api_HostAddress}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "ahmed_dev",
+  "password": "SecurePassword123!"
+}
+
+###
