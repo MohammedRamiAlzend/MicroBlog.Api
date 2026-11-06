@@ -105,10 +105,18 @@ public class PostsController : ControllerBase
         return Ok(results);
     }
 
-    // DELETE: api/posts/{id}
+    // DELETE: api/posts/{id}  (protected)
+    [Authorize]
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            return Unauthorized(new { message = "المستخدم غير موثق." });
+        }
+
         var deleted = await _postService.DeletePostAsync(id);
 
         if (!deleted)
@@ -116,6 +124,13 @@ public class PostsController : ControllerBase
             return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
         }
 
-        return NoContent();
+        // Who may delete which post (ownership) is added in a later session
+        return Ok(new
+        {
+            Message = "تم حذف المنشور بنجاح",
+            PostId = id,
+            DeletedBy = currentUserId,
+            DeletedAt = DateTime.UtcNow
+        });
     }
 }
