@@ -45,6 +45,14 @@ app.UseCors("AllowViteApp");
 
 app.UseAuthorization();
 
+// Quick health check using a Minimal API endpoint (kept for later sessions)
+app.MapGet("/api/ping", () => Results.Ok(new
+{
+    Message = "MicroBlog API is running successfully!",
+    Session = 7,
+    Timestamp = DateTime.UtcNow
+})).WithName("GetPingStatus");
+
 app.MapControllers();
 
 app.Run();
