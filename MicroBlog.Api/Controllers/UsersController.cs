@@ -1,10 +1,16 @@
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
 
 namespace MicroBlog.Api.Controllers;
 
+// [Authorize] on the class protects every endpoint inside it,
+// unless a method opts out with [AllowAnonymous]
+[Authorize]
 [ApiController]
 [Route("api/[controller]")]
 public class UsersController : ControllerBase
@@ -16,30 +22,60 @@ public class UsersController : ControllerBase
         _context = context;
     }
 
-    // GET: api/users/{id}
-    [HttpGet("{id:int}")]
-    public async Task<IActionResult> GetById(int id)
+    // GET: api/users/me
+    [HttpGet("me")]
+    public async Task<ActionResult<UserProfileResponse>> GetCurrentUserProfile()
     {
-        var user = await _context.Users.FindAsync(id);
+        // The id comes from the validated token, never from the URL or the body
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!int.TryParse(userIdClaim, out int userId))
+        {
+            return Unauthorized(new { message = "بيانات هوية التوكن غير صالحة." });
+        }
+
+        // Read-only query: AsNoTracking skips change tracking (less memory, faster)
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        // The token can outlive the account, so always check that the user still exists
+        if (user == null)
+        {
+            return NotFound(new { message = "لم يتم العثور على المستخدم." });
+        }
+
+        return Ok(ToProfile(user));
+    }
+
+    // GET: api/users/{id}  (public profile)
+    [AllowAnonymous]
+    [HttpGet("{id:int}")]
+    public async Task<ActionResult<UserProfileResponse>> GetUserById(int id)
+    {
+        var user = await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id);
 
         if (user == null)
         {
-            return NotFound(new { message = $"المستخدم رقم {id} غير موجود." });
+            return NotFound(new { message = $"المستخدم ذو المعرّف {id} غير موجود." });
         }
 
-        return Ok(ToResponse(user));
+        return Ok(ToProfile(user));
     }
 
     // Entity -> DTO mapping, so PasswordHash never leaves the server
-    private static UserResponseDto ToResponse(User user)
+    private static UserProfileResponse ToProfile(User user)
     {
-        return new UserResponseDto
+        return new UserProfileResponse
         {
             Id = user.Id,
             Username = user.Username,
             Email = user.Email,
             Bio = user.Bio,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            LastLoginAt = user.LastLoginAt
         };
     }
 }
