@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
 using MicroBlog.Api.Entities;
@@ -41,6 +42,21 @@ public class PostsController : ControllerBase
         }
 
         return Ok(post);
+    }
+
+    // GET: api/posts/user/{userId}  (public: the posts of one user, newest first)
+    [HttpGet("user/{userId:int}")]
+    public async Task<ActionResult<IEnumerable<PostResponseDto>>> GetByUser(int userId)
+    {
+        var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+
+        if (!userExists)
+        {
+            return NotFound(new { message = $"المستخدم برقم {userId} غير موجود." });
+        }
+
+        var posts = await _postService.GetPostsByUserAsync(userId);
+        return Ok(posts);
     }
 
     // GET: api/posts/my-posts  (protected: only the caller's own posts)
