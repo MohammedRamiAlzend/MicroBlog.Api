@@ -205,13 +205,8 @@ public class PostsController : ControllerBase
         _context.Posts.Remove(post);
         await _context.SaveChangesAsync();
 
-        return Ok(new
-        {
-            Message = "تم حذف المنشور بنجاح",
-            PostId = id,
-            DeletedBy = currentUserId,
-            DeletedAt = DateTime.UtcNow
-        });
+        // REST standard for a successful delete: 204 with an empty body
+        return NoContent();
     }
 
     // Entity -> DTO: flat shape without the User -> Posts cycle
