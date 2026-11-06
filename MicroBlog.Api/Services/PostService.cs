@@ -39,13 +39,16 @@ public class PostService : IPostService
         };
     }
 
-    public async Task<IEnumerable<PostResponseDto>> GetAllPostsAsync(int? currentUserId = null)
+    public Task<PagedResult<PostResponseDto>> GetAllPostsAsync(
+        PaginationParams paging, int? currentUserId = null, CancellationToken cancellationToken = default)
     {
-        return await _context.Posts
+        var query = _context.Posts
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
-            .Select(ToResponse(currentUserId))
-            .ToListAsync();
+            .ThenByDescending(p => p.Id) // explicit, unique ordering => stable pages
+            .Select(ToResponse(currentUserId));
+
+        return PagedResult<PostResponseDto>.CreateAsync(query, paging.Page, paging.PageSize, cancellationToken);
     }
 
     public async Task<PostResponseDto?> GetPostByIdAsync(int id, int? currentUserId = null)

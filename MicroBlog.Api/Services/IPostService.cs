@@ -7,7 +7,8 @@ namespace MicroBlog.Api.Services;
 // Database calls are asynchronous, so every method now returns a Task
 public interface IPostService
 {
-    Task<IEnumerable<PostResponseDto>> GetAllPostsAsync(int? currentUserId = null);
+    Task<PagedResult<PostResponseDto>> GetAllPostsAsync(
+        PaginationParams paging, int? currentUserId = null, CancellationToken cancellationToken = default);
     Task<PostResponseDto?> GetPostByIdAsync(int id, int? currentUserId = null);
     Task<Post> CreatePostAsync(Post newPost);
     Task<IEnumerable<PostResponseDto>> GetPostsByUserAsync(int userId, int? currentUserId = null);

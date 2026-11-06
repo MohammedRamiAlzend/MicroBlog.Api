@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.DTOs;
+using MicroBlog.Api.DTOs.Common;
 using MicroBlog.Api.Entities;
 using MicroBlog.Api.Services;
 
@@ -31,9 +32,11 @@ public class PostsController : ControllerBase
 
     // GET: api/posts
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PostResponseDto>>> GetAll()
+    // Paged: ?page=1&pageSize=10 (max 50). Returning every post in one response does not scale.
+    public async Task<ActionResult<PagedResult<PostResponseDto>>> GetAll(
+        [FromQuery] PaginationParams paging, CancellationToken cancellationToken)
     {
-        var posts = await _postService.GetAllPostsAsync(GetOptionalUserId());
+        var posts = await _postService.GetAllPostsAsync(paging, GetOptionalUserId(), cancellationToken);
         return Ok(posts);
     }
 
