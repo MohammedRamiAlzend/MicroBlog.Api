@@ -14,3 +14,29 @@ GET {{MicroBlog.Api_HostAddress}}/api/articles
 Accept: application/json
 
 ###
+
+GET {{MicroBlog.Api_HostAddress}}/api/posts
+Accept: application/json
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/posts/1
+Accept: application/json
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/posts/search?term=net
+Accept: application/json
+
+###
+
+POST {{MicroBlog.Api_HostAddress}}/api/posts
+Content-Type: application/json
+
+{
+  "title": "My first post",
+  "content": "Hello MicroBlog!",
+  "author": "Rami"
+}
+
+###
