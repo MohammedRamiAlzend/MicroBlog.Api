@@ -1,3 +1,6 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using MicroBlog.Api.Data;
 using MicroBlog.Api.Services;
@@ -19,6 +22,35 @@ builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlite(connectionString));
+
+
+// Authentication: validate the JWT sent in the Authorization header
+var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+var secretKey = jwtSettings["Key"]
+    ?? throw new InvalidOperationException("JwtSettings:Key is missing from the configuration.");
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"],
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"],
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero // no extra grace period after the token expires
+    };
+});
+
+// Authorization: enables [Authorize] / [AllowAnonymous]
+builder.Services.AddAuthorization();
 
 // CORS policy: lets the React/Vite app (port 5173) call this API from the browser
 builder.Services.AddCors(options =>
@@ -55,6 +87,8 @@ app.UseHttpsRedirection();
 // Order matters: UseCors goes after UseHttpsRedirection and before UseAuthorization / MapControllers
 app.UseCors("AllowViteApp");
 
+// Order matters: first identify the user (Authentication), then check permissions (Authorization)
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Quick health check using a Minimal API endpoint (kept for later sessions)
