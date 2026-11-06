@@ -5,12 +5,24 @@ namespace MicroBlog.Api.Data;
 
 public class AppDbContext : DbContext
 {
-    // The options (provider + connection string) are passed to the base class
     public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
     {
     }
 
-    // Each DbSet represents a table
     public DbSet<User> Users => Set<User>();
     public DbSet<Post> Posts => Set<Post>();
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Unique indexes: the database itself refuses duplicate emails and usernames
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Username)
+            .IsUnique();
+    }
 }
