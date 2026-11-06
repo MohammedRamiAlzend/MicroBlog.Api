@@ -79,10 +79,16 @@ public class PostService : IPostService
 
     // The whole feed page is ONE SQL statement: the author name is a JOIN, the counters are
     // COUNT subqueries and "liked by me" is an EXISTS subquery. No N+1 queries.
-    public async Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId)
+    public Task<IEnumerable<FeedPostResponseDto>> GetFeedAsync(int page, int pageSize, int? currentUserId)
     {
-        int viewerId = currentUserId ?? 0; // 0 never matches a real user id
+        return GetFeedPageAsync(_context.Posts, page, pageSize, currentUserId ?? 0); // 0 never matches a real user
+    }
 
+    // Shared by every feed: the caller decides WHICH posts (the source query),
+    // this method decides HOW they look (order, shape, page).
+    private static async Task<IEnumerable<FeedPostResponseDto>> GetFeedPageAsync(
+        IQueryable<Post> source, int page, int pageSize, int viewerId)
+    {
         // (page - 1) * pageSize can overflow int and wrap around to page 1: compute it as long
         long skip = (long)(page - 1) * pageSize;
         if (skip > int.MaxValue)
@@ -90,7 +96,7 @@ public class PostService : IPostService
             return new List<FeedPostResponseDto>();
         }
 
-        return await _context.Posts
+        return await source
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
             .ThenByDescending(p => p.Id) // tie-breaker: pages never repeat or skip a post

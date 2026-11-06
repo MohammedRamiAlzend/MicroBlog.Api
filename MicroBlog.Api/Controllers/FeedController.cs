@@ -25,8 +25,22 @@ public class FeedController : ControllerBase
     public async Task<ActionResult<IEnumerable<FeedPostResponseDto>>> GetGlobalFeed(
         [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        // Without these checks pageSize=-5 returns EVERY post (SQLite LIMIT -5 = no limit)
-        // and page=0 silently returns the first page
+        var invalid = ValidatePaging(page, ref pageSize);
+        if (invalid != null)
+        {
+            return invalid;
+        }
+
+        int? currentUserId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
+
+        var feed = await _postService.GetFeedAsync(page, pageSize, currentUserId);
+        return Ok(feed);
+    }
+
+    // Without these checks pageSize=-5 returns EVERY post (SQLite LIMIT -5 = no limit)
+    // and page=0 silently returns the first page
+    private BadRequestObjectResult? ValidatePaging(int page, ref int pageSize)
+    {
         if (page < 1)
         {
             return BadRequest(new { message = "رقم الصفحة يجب أن يكون 1 أو أكبر." });
@@ -39,10 +53,6 @@ public class FeedController : ControllerBase
 
         // A client cannot ask for the whole table in one request
         pageSize = Math.Min(pageSize, MaxPageSize);
-
-        int? currentUserId = int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int id) ? id : null;
-
-        var feed = await _postService.GetFeedAsync(page, pageSize, currentUserId);
-        return Ok(feed);
+        return null;
     }
 }
