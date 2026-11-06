@@ -83,6 +83,13 @@ public class PostService : IPostService
     {
         int viewerId = currentUserId ?? 0; // 0 never matches a real user id
 
+        // (page - 1) * pageSize can overflow int and wrap around to page 1: compute it as long
+        long skip = (long)(page - 1) * pageSize;
+        if (skip > int.MaxValue)
+        {
+            return new List<FeedPostResponseDto>();
+        }
+
         return await _context.Posts
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
@@ -97,7 +104,7 @@ public class PostService : IPostService
                 CommentsCount = p.Comments.Count,
                 IsLikedByCurrentUser = p.Likes.Any(l => l.UserId == viewerId)
             })
-            .Skip((page - 1) * pageSize)
+            .Skip((int)skip)
             .Take(pageSize)
             .ToListAsync();
     }
