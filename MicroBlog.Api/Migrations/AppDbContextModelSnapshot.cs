@@ -17,6 +17,24 @@ namespace MicroBlog.Api.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.14");
 
+            modelBuilder.Entity("MicroBlog.Api.Entities.Like", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("UserId", "PostId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("Likes");
+                });
+
             modelBuilder.Entity("MicroBlog.Api.Entities.Post", b =>
                 {
                     b.Property<int>("Id")
@@ -93,6 +111,25 @@ namespace MicroBlog.Api.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("MicroBlog.Api.Entities.Like", b =>
+                {
+                    b.HasOne("MicroBlog.Api.Entities.Post", "Post")
+                        .WithMany("Likes")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MicroBlog.Api.Entities.User", "User")
+                        .WithMany("Likes")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("MicroBlog.Api.Entities.Post", b =>
                 {
                     b.HasOne("MicroBlog.Api.Entities.User", "User")
@@ -104,8 +141,15 @@ namespace MicroBlog.Api.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("MicroBlog.Api.Entities.Post", b =>
+                {
+                    b.Navigation("Likes");
+                });
+
             modelBuilder.Entity("MicroBlog.Api.Entities.User", b =>
                 {
+                    b.Navigation("Likes");
+
                     b.Navigation("Posts");
                 });
 #pragma warning restore 612, 618

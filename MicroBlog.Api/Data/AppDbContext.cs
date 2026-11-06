@@ -11,6 +11,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<Post> Posts => Set<Post>();
+    public DbSet<Like> Likes => Set<Like>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -44,6 +45,26 @@ public class AppDbContext : DbContext
                   .WithMany(u => u.Posts)
                   .HasForeignKey(p => p.UserId)
                   .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Like>(entity =>
+        {
+            // Composite primary key: the database refuses a second like by the same user on the same post
+            entity.HasKey(l => new { l.UserId, l.PostId });
+
+            // Deleting a user or a post also deletes the related likes
+            entity.HasOne(l => l.User)
+                  .WithMany(u => u.Likes)
+                  .HasForeignKey(l => l.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(l => l.Post)
+                  .WithMany(p => p.Likes)
+                  .HasForeignKey(l => l.PostId)
+                  .OnDelete(DeleteBehavior.Cascade);
+
+            // The PK index starts with UserId, so add one for "all likes of a post" (counts)
+            entity.HasIndex(l => l.PostId);
         });
     }
 }

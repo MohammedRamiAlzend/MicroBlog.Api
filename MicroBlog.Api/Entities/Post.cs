@@ -26,4 +26,7 @@ public class Post
     // Reference navigation property: the user who wrote the post
     [ForeignKey(nameof(UserId))]
     public User User { get; set; } = null!;
+
+    // The users who liked this post (through the Likes join table)
+    public ICollection<Like> Likes { get; set; } = new List<Like>();
 }

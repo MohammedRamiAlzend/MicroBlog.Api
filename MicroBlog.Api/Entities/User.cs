@@ -38,4 +38,7 @@ public class User
     // Collection navigation property: all posts written by this user.
     // Initialised with an empty list so adding posts never hits a null reference
     public ICollection<Post> Posts { get; set; } = new List<Post>();
+
+    // The posts this user liked (through the Likes join table)
+    public ICollection<Like> Likes { get; set; } = new List<Like>();
 }
