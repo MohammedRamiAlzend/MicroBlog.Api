@@ -83,6 +83,14 @@ public class CommentsController : ControllerBase
             return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
         }
 
+        // Quality check after trimming: reject empty / one-character noise and store the clean text
+        var cleanContent = request.Content.Trim();
+
+        if (cleanContent.Length < 2)
+        {
+            return BadRequest(new { message = "يجب أن يحتوي التعليق على حرفين على الأقل بعد إزالة المسافات." });
+        }
+
         // Check the parent first: otherwise the database answers with "FOREIGN KEY constraint failed" (500)
         if (!await _context.Posts.AnyAsync(p => p.Id == postId))
         {
@@ -98,7 +106,7 @@ public class CommentsController : ControllerBase
 
         var comment = new Comment
         {
-            Content = request.Content,
+            Content = cleanContent,
             PostId = postId,
             UserId = currentUserId,
             CreatedAt = DateTime.UtcNow
