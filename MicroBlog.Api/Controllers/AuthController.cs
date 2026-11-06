@@ -12,6 +12,9 @@ public class AuthController : ControllerBase
 {
     private readonly AppDbContext _context;
 
+    // Common weak passwords that are rejected (session lab)
+    private static readonly string[] ForbiddenPasswords = { "123456", "password", "qwerty", "12345678" };
+
     public AuthController(AppDbContext context)
     {
         _context = context;
@@ -22,6 +25,12 @@ public class AuthController : ControllerBase
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
+        // 0. Reject very common passwords
+        if (ForbiddenPasswords.Contains(request.Password.ToLower()))
+        {
+            return BadRequest(new { message = "كلمة المرور هذه سهلة التخمين وشائعة جداً، يرجى اختيار كلمة مرور أقوى." });
+        }
+
         // 1. Duplicate username check (AnyAsync produces a cheap EXISTS query)
         bool usernameExists = await _context.Users
             .AnyAsync(u => u.Username.ToLower() == request.Username.ToLower());
