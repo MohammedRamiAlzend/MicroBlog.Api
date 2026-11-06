@@ -168,3 +168,13 @@ Authorization: Bearer {{token}}
 
 GET {{MicroBlog.Api_HostAddress}}/api/users/2/follow-stats
 Accept: application/json
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/feed?page=1&pageSize=10
+Accept: application/json
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/feed?page=1&pageSize=10
+Authorization: Bearer {{token}}
