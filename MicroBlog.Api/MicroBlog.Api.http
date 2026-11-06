@@ -178,3 +178,8 @@ Accept: application/json
 
 GET {{MicroBlog.Api_HostAddress}}/api/feed?page=1&pageSize=10
 Authorization: Bearer {{token}}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/feed/following?page=1&pageSize=10
+Authorization: Bearer {{token}}
