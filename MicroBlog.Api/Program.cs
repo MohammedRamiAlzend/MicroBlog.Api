@@ -1,3 +1,4 @@
+using MicroBlog.Api.Services;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,6 +8,9 @@ var builder = WebApplication.CreateBuilder(args);
 // ==========================================
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// Register the service layer in the DI container (Scoped = one instance per HTTP request)
+builder.Services.AddScoped<IPostService, PostService>();
 
 // CORS policy: lets the React/Vite app (port 5173) call this API from the browser
 builder.Services.AddCors(options =>
