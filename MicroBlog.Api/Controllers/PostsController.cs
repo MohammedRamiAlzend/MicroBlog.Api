@@ -159,6 +159,85 @@ public class PostsController : ControllerBase
         return Ok(ToDto(post));
     }
 
+    // POST: api/posts/{id}/like  (protected)
+    [Authorize]
+    [HttpPost("{id:int}/like")]
+    public async Task<IActionResult> LikePost(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
+        }
+
+        if (!await _context.Posts.AnyAsync(p => p.Id == id))
+        {
+            return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
+        }
+
+        var alreadyLiked = await _context.Likes
+            .AnyAsync(l => l.PostId == id && l.UserId == currentUserId);
+
+        if (alreadyLiked)
+        {
+            return BadRequest(new { message = "لقد قمت بالإعجاب بهذا المنشور مسبقاً." });
+        }
+
+        _context.Likes.Add(new Like { PostId = id, UserId = currentUserId, CreatedAt = DateTime.UtcNow });
+
+        try
+        {
+            await _context.SaveChangesAsync();
+        }
+        catch (DbUpdateException)
+        {
+            // Two identical requests at once, or the account was deleted meanwhile:
+            // the composite key / foreign key in the database is the last line of defense
+            return BadRequest(new { message = "تعذر تسجيل الإعجاب. ربما أعجبت بهذا المنشور مسبقاً." });
+        }
+
+        return Ok(await BuildLikeResponseAsync(id, true, "تم الإعجاب بالمنشور بنجاح."));
+    }
+
+    // DELETE: api/posts/{id}/like  (protected)
+    [Authorize]
+    [HttpDelete("{id:int}/like")]
+    public async Task<IActionResult> UnlikePost(int id)
+    {
+        if (!int.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out int currentUserId))
+        {
+            return Unauthorized(new { message = "غير مصرح: تعذر التثبت من هوية المستخدم." });
+        }
+
+        if (!await _context.Posts.AnyAsync(p => p.Id == id))
+        {
+            return NotFound(new { message = $"المنشور رقم {id} غير موجود." });
+        }
+
+        var like = await _context.Likes
+            .FirstOrDefaultAsync(l => l.PostId == id && l.UserId == currentUserId);
+
+        if (like == null)
+        {
+            return BadRequest(new { message = "لم تقم بالإعجاب بهذا المنشور من قبل." });
+        }
+
+        _context.Likes.Remove(like);
+        await _context.SaveChangesAsync();
+
+        return Ok(await BuildLikeResponseAsync(id, false, "تم إلغاء الإعجاب بنجاح."));
+    }
+
+    private async Task<LikeResponseDto> BuildLikeResponseAsync(int postId, bool isLiked, string message)
+    {
+        return new LikeResponseDto
+        {
+            PostId = postId,
+            LikesCount = await _context.Likes.CountAsync(l => l.PostId == postId),
+            IsLiked = isLiked,
+            Message = message
+        };
+    }
+
     // GET: api/posts/search?term=xxx
     [HttpGet("search")]
     public async Task<IActionResult> SearchPosts([FromQuery] string? term)
