@@ -13,6 +13,7 @@ builder.Services.AddOpenApi();
 
 // Register the service layer in the DI container (Scoped = one instance per HTTP request)
 builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 
 // Register the database context (SQLite). The connection string comes from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
