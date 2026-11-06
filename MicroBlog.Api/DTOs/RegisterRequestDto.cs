@@ -2,11 +2,11 @@ using System.ComponentModel.DataAnnotations;
 
 namespace MicroBlog.Api.DTOs;
 
-// What the client is allowed to SEND when registering
-public class RegisterRequest
+public class RegisterRequestDto
 {
     [Required(ErrorMessage = "اسم المستخدم مطلوب.")]
-    [StringLength(20, MinimumLength = 3, ErrorMessage = "يجب أن يكون اسم المستخدم بين 3 و 20 حرفاً.")]
+    [StringLength(30, MinimumLength = 3, ErrorMessage = "يجب أن يكون اسم المستخدم بين 3 و 30 حرفاً.")]
+    [RegularExpression(@"^[a-zA-Z0-9_]+$", ErrorMessage = "اسم المستخدم يجب أن يحتوي على أحرف إنجليزية وأرقام وشرطة سفلية (_) فقط بدون مسافات.")]
     public string Username { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "البريد الإلكتروني مطلوب.")]
@@ -14,10 +14,9 @@ public class RegisterRequest
     public string Email { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "كلمة المرور مطلوبة.")]
-    [MinLength(8, ErrorMessage = "يجب ألا تقل كلمة المرور عن 8 خانات.")]
+    [MinLength(6, ErrorMessage = "يجب ألا تقل كلمة المرور عن 6 خانات.")]
     public string Password { get; set; } = string.Empty;
 
-    // Guided exercise: optional bio, max 100 characters
     [MaxLength(100, ErrorMessage = "السيرة الذاتية يجب ألا تتجاوز 100 حرف.")]
     public string? Bio { get; set; }
 }

@@ -20,7 +20,7 @@ public class UsersController : ControllerBase
 
     // POST: api/users/register
     [HttpPost("register")]
-    public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto request)
     {
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
         {
@@ -63,9 +63,9 @@ public class UsersController : ControllerBase
     }
 
     // Entity -> DTO mapping, so PasswordHash never leaves the server
-    private static UserResponse ToResponse(User user)
+    private static UserResponseDto ToResponse(User user)
     {
-        return new UserResponse
+        return new UserResponseDto
         {
             Id = user.Id,
             Username = user.Username,

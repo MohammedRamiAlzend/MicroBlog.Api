@@ -20,7 +20,7 @@ public class AuthController : ControllerBase
     // POST: api/auth/register
     // [ApiController] validates the DTO automatically and returns 400 before this code runs
     [HttpPost("register")]
-    public async Task<ActionResult<UserResponse>> Register([FromBody] RegisterRequest request)
+    public async Task<ActionResult<UserResponseDto>> Register([FromBody] RegisterRequestDto request)
     {
         if (await _context.Users.AnyAsync(u => u.Email == request.Email))
         {
@@ -41,7 +41,7 @@ public class AuthController : ControllerBase
         await _context.SaveChangesAsync();
 
         // Entity -> safe response DTO (PasswordHash is never returned)
-        var response = new UserResponse
+        var response = new UserResponseDto
         {
             Id = user.Id,
             Username = user.Username,

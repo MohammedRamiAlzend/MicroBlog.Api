@@ -1,7 +1,7 @@
 namespace MicroBlog.Api.DTOs;
 
-// What the client is allowed to RECEIVE: no password or other sensitive fields
-public class UserResponse
+// Never contains PasswordHash: even a hash must not leave the server (offline dictionary attacks)
+public class UserResponseDto
 {
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
