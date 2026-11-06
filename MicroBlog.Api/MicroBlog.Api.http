@@ -76,3 +76,31 @@ Content-Type: application/json
 }
 
 ###
+
+@token = paste_the_token_from_login_here
+
+GET {{MicroBlog.Api_HostAddress}}/api/auth/me
+Authorization: Bearer {{token}}
+
+###
+
+POST {{MicroBlog.Api_HostAddress}}/api/posts
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "My first protected post",
+  "content": "Written by the logged-in user"
+}
+
+###
+
+GET {{MicroBlog.Api_HostAddress}}/api/posts/my-posts
+Authorization: Bearer {{token}}
+
+###
+
+DELETE {{MicroBlog.Api_HostAddress}}/api/posts/1
+Authorization: Bearer {{token}}
+
+###
