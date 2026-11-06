@@ -89,7 +89,6 @@ Authorization: Bearer {{token}}
 Content-Type: application/json
 
 {
-  "title": "My first protected post",
   "content": "Written by the logged-in user"
 }
 
